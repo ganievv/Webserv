@@ -3,17 +3,17 @@ NAME				:= webserv
 CXX					:= c++
 FLAGS				:= -g -Wall -Wextra -Werror -std=c++98
 
-INCDIRS				:= -I./include/
+INCDIRS				:= -I./includes/
 
 #directories of source files
-VPATH				:= 
+VPATH				:= srcs/main srcs/http_server
 
 #source files
-SRCS_MAIN			:= 
-SRCS_CONFIG_FILE	:= 
+SRCS_MAIN			:= main.cpp
+SRCS_HTTP_SERVER	:= 
 #...
 
-SRCS				:= $(SRCS_MAIN) $(SRCS_CONFIG_FILE) \
+SRCS				:= $(SRCS_MAIN) $(SRCS_HTTP_SERVER) \
 
 BUILDDIR			:= ./build
 ODIR				:= $(BUILDDIR)/obj
