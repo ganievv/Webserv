@@ -1,7 +1,7 @@
 NAME				:= webserv
 
 CXX					:= c++
-FLAGS				:= -g -Wall -Wextra -Werror -std=c++17
+FLAGS				:= -g -Wall -Wextra -Werror -std=c++98
 
 INCDIRS				:= -I./include/
 
