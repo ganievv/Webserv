@@ -2,6 +2,7 @@
 #define	HTTPSERVER_HPP
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include "Location.hpp"
@@ -22,6 +23,12 @@ class HttpServer
 		std::string	server_name; // server_name example.com;
 
 		/**
+		 * The first server for a host:port will be the default
+		 * for this host:port (subject pdf)
+		 */
+		bool		is_default;
+
+		/**
 		 * map:
 		 * 404 -> "./htmls/404.html"
 		 * 500 -> "./htmls/500.html"
@@ -34,6 +41,7 @@ class HttpServer
 		std::map<int, std::string>	error_pages;
 
 		// routing rules based on the requested URL (see NGINX)
+		// each location should be unique so maybe we should use std:set
 		std::vector<Location>		locations;
 
 		/**
