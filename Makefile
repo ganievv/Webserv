@@ -6,14 +6,23 @@ FLAGS				:= -g -Wall -Wextra -Werror -std=c++98
 INCDIRS				:= -I./includes/
 
 #directories of source files
-VPATH				:= srcs/main srcs/http_server
+VPATH				:= srcs/config srcs/http srcs/main srcs/network	\
+					   srcs/server									\
 
 #source files
-SRCS_MAIN			:= main.cpp
-SRCS_HTTP_SERVER	:= 
-#...
+SRCS_CONFIG			:= ConfigParser.cpp 							\
 
-SRCS				:= $(SRCS_MAIN) $(SRCS_HTTP_SERVER) \
+SRCS_HTTP			:= Request.cpp Response.cpp 					\
+
+SRCS_MAIN			:= main.cpp 									\
+
+SRCS_NETWORK		:= Connection.cpp Poller.cpp Sockets.cpp		\
+
+SRCS_SERVER			:= Location.cpp Server.cpp						\
+
+
+SRCS				:= $(SRCS_CONFIG) $(SRCS_HTTP) $(SRCS_MAIN)		\
+					   $(SRCS_NETWORK) $(SRCS_SERVER)				\
 
 BUILDDIR			:= ./build
 ODIR				:= $(BUILDDIR)/obj

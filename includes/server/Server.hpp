@@ -1,18 +1,14 @@
-#ifndef	HTTPSERVER_HPP
-#define	HTTPSERVER_HPP
+#ifndef	SERVER_HPP
+#define	SERVER_HPP
 
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include "Location.hpp"
 
-/**
- * create an array of 'HttpServer' objects for each
- * server from configuration file
- */
+class Location;
 
-class HttpServer
+class Server
 {
 	private:
 		// If a characteristic is not defined, the std::string will be an empty string
