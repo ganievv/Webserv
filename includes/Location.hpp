@@ -43,9 +43,28 @@ class Location
 		int			status_code;
 		std::string	new_path;
 
+		/**
+		 * Turn on or off directory listing
+		 * 
+		 * autoindex on;
+		 * autoindex off;
+		 */
 		bool		autoindex;
 
+		/**
+		 * Set a default file to answer if the request is a directory
+		 * 
+		 * index welcome.html;
+		 * 
+		 */
 		std::string	index;
+
+		/**
+		 * 
+		 * ◦ Execute CGI based on certain file extension (for example .php).
+		 * ◦ Make it work with POST and GET methods.
+		 * ◦ Make the route able to accept uploaded files and configure where they should be saved.
+		 */
 
 	public:
 };

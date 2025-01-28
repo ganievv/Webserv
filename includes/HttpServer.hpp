@@ -23,6 +23,13 @@ class HttpServer
 		std::string	server_name; // server_name example.com;
 
 		/**
+		 * Global root directory for the server
+		 * 
+		 * root /path/to/your/root;
+		 */
+		std::string	root;
+
+		/**
 		 * The first server for a host:port will be the default
 		 * for this host:port (subject pdf)
 		 */
