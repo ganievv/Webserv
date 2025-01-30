@@ -1,12 +1,7 @@
 #include "../../includes/webserv.hpp"
 
 // check for error codes in nginx
-// check if / is needed at the end of paths
 
-//1. redir code and redir path should be 2 vars
-//2 check autoindex if it's working correctly // should work
-//3 doesn't print root var from struct Route // has nothing to print
-//4 add alias feature for struct Route only // done
 //5 nginx behavior for duplicate directives in the same location or server section in config file
 
 
@@ -112,7 +107,7 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 				getPortHost(getValue(line), currentServer);
 			} else if (line.find("server_name") == 0) {
 				currentServer.serverNames = split(getValue(line), ' ');
-			} else if (line.find("root") == 0) {
+			} else if (line.find("root") == 0 && !insideRoute) {
 				currentServer.root = trim(getValue(line));
 			} else if (line.find("error_page") == 0) {
 				std::vector<std::string>	parts = split(getValue(line), ' ');
