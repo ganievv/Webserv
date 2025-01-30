@@ -4,6 +4,9 @@
 
 //5 nginx behavior for duplicate directives in the same location or server section in config file
 
+//same port multiple times should not work, same IP and port on multiple servers should throw error, host:port chcek
+//check if common ports work 
+//check incoherent values for hostname and so on
 
 std::string	ConfigParser::trim(const std::string &str) {
 	size_t	first = str.find_first_not_of(" \t"); //first not whitespace
@@ -154,9 +157,20 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 	file.close();
 }
 
+void	ConfigParser::checkDuplicateServer(void) {
+	for (size_t i = 0; i < servers.size(); i++) {
+		for (size_t j = i + 1; j < servers.size(); j++) {
+			if ((servers[i].host == servers[j].host) && (servers[i].port == servers[j].port)) {
+				throw std::runtime_error("Duplicate Server Configuration Found: Same Host and Same Port on multiple Servers!");
+			}
+		}
+	}
+}
+
 void	ConfigParser::tester(const std::string &inFile) {
 	ConfigParser parser;
 	parser.parseConfigFile(inFile);
+	parser.checkDuplicateServer();
 
 	for (const auto &server : parser.servers) {
 		std::cout << "\nServer on " << server.host << ":" << server.port << "\n";
