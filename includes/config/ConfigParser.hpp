@@ -32,6 +32,7 @@ struct serverConfig {
 	std::vector<std::string>	serverNames;
 	std::map<int, std::string>	errorPages;
 	int	client_max_body_size = 0;
+	std::string		root;
 	std::vector<Route> routes;
 };
 

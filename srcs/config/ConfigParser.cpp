@@ -1,7 +1,7 @@
 #include "../../includes/webserv.hpp"
 
-//see if path needs ./ 
-// maybe error codes
+// check for error codes in nginx
+// check if / is needed at the end of paths
 
 std::string	ConfigParser::trim(const std::string &str) {
 	size_t	first = str.find_first_not_of(" \t"); //first not whitespace
@@ -60,6 +60,9 @@ void	ConfigParser::getPortHost(const std::string &line, serverConfig &config) {
 		config.port = line.substr(pos + 1);
 		config.host = line.substr(0, pos);
 	}
+	else {
+		config.port = line; //if only one, it makes it the port, could be error prone
+	}
 	//else default case?
 }
 
@@ -102,6 +105,8 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 				getPortHost(getValue(line), currentServer);
 			} else if (line.find("server_name") == 0) {
 				currentServer.serverNames = split(getValue(line), ' ');
+			} else if (line.find("root") == 0) {
+				currentServer.root = trim(getValue(line));
 			} else if (line.find("error_page") == 0) {
 				std::vector<std::string>	parts = split(getValue(line), ' ');
 				if (parts.size() == 2) {
@@ -121,7 +126,7 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 					currentRoute.root = trim(getValue(line));
 				} else if (line.find("index") == 0) { //default file
 					currentRoute.indexFile = trim(getValue(line));
-				} else if (line.find("allowed_methods") == 0) { //list of allowed http methods
+				} else if (line.find("limit_except") == 0) { //list of allowed http methods (limit_except)
 					currentRoute.allowedMethods = split(getValue(line), ' ');
 				} else if (line.find("autoindex") == 0) {  //dir listing
 					currentRoute.autoindex = getValue(line) == "on";
@@ -157,6 +162,8 @@ void	ConfigParser::tester(const std::string &inFile) {
 			std::cout << "\n";
 		}
 
+		std::cout << " Server Root: " << server.root << "\n";
+
 		if (!server.errorPages.empty()) {
 			std::cout << " Error Pages:\n";
 			for (const auto &errorPage : server.errorPages) {
@@ -172,7 +179,7 @@ void	ConfigParser::tester(const std::string &inFile) {
 			if (!route.root.empty()) std::cout << "    Root: " << route.root << "\n";
 			if (!route.indexFile.empty()) std::cout << "    Index File: " << route.indexFile << "\n";
 			if (!route.allowedMethods.empty()) {
-				std::cout << "    Allowed Methods: ";
+				std::cout << "    Allowed Methods (limit_except): ";
 				for (const auto &method : route.allowedMethods) std::cout << method << " ";
 				std::cout << "\n";
 			}
