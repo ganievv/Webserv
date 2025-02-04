@@ -1,6 +1,6 @@
 #include "../../includes/webserv.hpp"
 
-unsigned short convertStrToUShort(const std::string& s)
+unsigned short	Sockets::convertStrToUShort(const std::string& s)
 {
 	unsigned short	nbr;
 	unsigned long	temp = std::stoul(s);
@@ -20,7 +20,7 @@ void	error_exit(const std::string& msg, const std::string& server_name)
 	std::exit(EXIT_FAILURE);
 }
 
-void	setNonblockMode(int fd, const std::string& server_name)
+void	Sockets::setNonblockMode(int fd, const std::string& server_name)
 {
 	int fd_flags = fcntl(fd, F_GETFL);
 
@@ -35,7 +35,7 @@ void	setNonblockMode(int fd, const std::string& server_name)
 			server_name);
 }
 
-struct in_addr	convertStrIpToBinIP(std::string& ip_str, const serverConfig& server)
+struct in_addr	Sockets::convertStrIpToBinIP(std::string& ip_str, const serverConfig& server)
 {
 	struct addrinfo hints, *res = nullptr;
 	std::memset(&hints, 0, sizeof(hints));
@@ -57,7 +57,7 @@ struct in_addr	convertStrIpToBinIP(std::string& ip_str, const serverConfig& serv
 	return bin_addr;
 }
 
-void	bindSocket(int sock_fd, const serverConfig& server)
+void	Sockets::bindSocket(int sock_fd, const serverConfig& server)
 {
 	struct sockaddr_in	sock_addr;
 
@@ -75,10 +75,8 @@ void	bindSocket(int sock_fd, const serverConfig& server)
 		error_exit("failed to bind a socket", server.serverNames.front());
 }
 
-void	setupSockets(std::vector<serverConfig>& servers)
+void	Sockets::initSockets(std::vector<serverConfig>& servers)
 {
-	#define BACKLOG 100
-
 	for (const auto& server : servers) {
 
 		/*create a socket*/
@@ -88,9 +86,6 @@ void	setupSockets(std::vector<serverConfig>& servers)
 
 		/**
 		 * allow the socket to be reuseable
-		 * 
-		 * Care should be taken when using this flag as it makes TCP less reliable.
-		 * 
 		 */
 		int	on = 1;
 		int res = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
@@ -99,25 +94,28 @@ void	setupSockets(std::vector<serverConfig>& servers)
 				server.serverNames.front());
 
 		/**
-		 *  set the socket to be nonblocking
+		 * set the socket to be nonblocking;
+		 * 
+		 * all of the sockets for the incoming connections
+		 * are also nonblocking because they inherit that state
+		 * from the listening socket - is it correct ?
 		 */
 		setNonblockMode(fd, server.serverNames.front());
 
 		/**
 		 * bind the socket
-		 * 
-		 * int bind(int sockfd, const struct sockaddr *addr,
-		 * 		socklen_t addrlen);
 		 */
 		bindSocket(fd, server);
 
 		/**
-		 * set the listen back log -> outside of the socket loop creation ?
-		 * 
-		 * int listen(int sockfd, int backlog);
-		 * 
+		 * set the listen back log
 		 */
 		if (listen(fd, BACKLOG) == -1)
 			error_exit("failed to listen on socket", server.serverNames.front());
+
+		/**
+		 * save the socket
+		 */
+		server_fds.push_back(fd);
 	}
 }
