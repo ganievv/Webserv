@@ -1,16 +1,17 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include <unistd.h>
+
 class Poller;
 
 class Connection
 {
 	private:
-		bool	isServerSocket(int fd, const std::vector<int>& server_fds);
 	public:
-		bool	handleServerFd(int pollfd_i, Poller& poller,
-					const std::vector<int>& server_fds);
-		void	handleClientFd(int fd);
+		bool	isServerFd(int fd, const std::vector<int>& server_fds);
+		void	handleServerFd(int fd, Poller& poller);
+		void	handleClientFd(struct pollfd& pollfd);
 };
 
 #endif

@@ -27,14 +27,16 @@ int	main(int argc, char **argv)
 
 				if (!(poller.poll_fds[i].revents & POLLIN)) continue;
 
-				bool is_server = connection.handleServerFd(i, poller,
-						server_sockets.server_fds);
-				if (!is_server) {
+				if (connection.isServerFd(poller.poll_fds[i].fd,
+						server_sockets.server_fds)) {
+					connection.handleServerFd(poller.poll_fds[i].fd, poller);
+				}
+				else {
 					//read data from the client socket (poller.poll_fds[i].fd)
 					//alalize request
 					//form response
 					//send response
-					connection.handleClientFd(poller.poll_fds[i].fd); // test for printing the request data
+					connection.handleClientFd(poller.poll_fds[i]); // test for printing the request data
 				}
 			}
 		}
