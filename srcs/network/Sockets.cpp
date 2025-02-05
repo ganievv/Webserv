@@ -22,15 +22,7 @@ void	error_exit(const std::string& msg, const std::string& server_name)
 
 void	Sockets::setNonblockMode(int fd, const std::string& server_name)
 {
-	int fd_flags = fcntl(fd, F_GETFL);
-
-	if (fd_flags == -1)
-		error_exit("failed to GET flags for a socket",
-			server_name);
-
-	fd_flags |= O_NONBLOCK;
-
-	if (fcntl(fd, F_SETFL, fd_flags) == -1)
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
 		error_exit("failed to SET the O_NONBLOCK flag for a socket",
 			server_name);
 }
