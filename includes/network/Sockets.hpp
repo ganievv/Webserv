@@ -18,10 +18,12 @@ class Sockets
 
 		unsigned short	convertStrToUShort(const std::string& s);
 		struct in_addr	convertStrIpToBinIP(std::string& ip_str,
-							const serverConfig& server);
+							const std::string& server_name,
+							const std::string& port);
 
 		void	setNonblockMode(int fd, const std::string& server_name);
-		void	bindSocket(int sock_fd, const serverConfig& server);
+		void	bindSocket(int sock_fd, const std::string& server_name,
+					const serverConfig& server);
 	public:
 		std::vector<int>	server_fds;
 		void	initSockets(std::vector<serverConfig>& servers);
