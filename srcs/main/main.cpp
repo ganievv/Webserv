@@ -1,17 +1,26 @@
 #include "../../includes/webserv.hpp"
 
+std::string getConfigPath(int argc, char **argv)
+{
+	std::string	path = "./webserv.conf"; // define a default path
+
+	if (argc > 1)
+		path = argv[1];
+
+	return path;
+}
+
 int	main(int argc, char **argv)
 {
-	(void)argc;
-
 	ConfigParser	parser;
 	Sockets			server_sockets;
 	Poller			poller;
 	Connection		connection;
 
 	try {
-		//parser.tester(argv[1]); //for printing (has dup check call inside)
-		parser.parseConfigFile(argv[1]); //no prints, needs dup check called after
+		std::string	config_path = getConfigPath(argc, argv);
+		//parser.tester(config_path); //for printing (has dup check call inside)
+		parser.parseConfigFile(config_path); //no prints, needs dup check called after
 		parser.checkDuplicateServer();
 
 		server_sockets.initSockets(parser.servers);
