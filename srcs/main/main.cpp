@@ -23,7 +23,7 @@ int	main(int argc, char **argv)
 		parser.parseConfigFile(config_path); //no prints, needs dup check called after
 		parser.checkDuplicateServer();
 
-		// httpRequestTester();
+		// httpRequestTester(); //prints the tests
 
 		server_sockets.initSockets(parser.servers);
 		poller.initPoll(server_sockets.server_fds);

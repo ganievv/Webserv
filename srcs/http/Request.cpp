@@ -117,5 +117,78 @@ HttpRequest	parseHttpRequest(const std::string &rawRequest) {
 }
 
 int	httpRequestTester(void) {
+	std::string testRequest1 =
+		"GET /index.html HTTP/1.1\r\n"
+		"Host: example.com\r\n"
+		"User-Agent: TestClient/1.0\r\n"
+		"\r\n";
+
+	std::string testRequest2 =
+		"POST /submit HTTP/1.1\r\n"
+		"hOSt: example.com\r\n"
+		"coNTenT-lEnGth: 12\r\n"
+		"content-type: application/x-www-form-urlencoded\r\n"
+		"\r\n"
+		"name=JohnDoe";
+
+	std::string testRequest3 =
+		"INVALID /bad HTTP/1.1\r\n"
+		"Host: example.com\r\n"
+		"\r\n";
+
+	std::string testRequest4 =
+		"GET / HTTP/1.1\r\n"
+		"Host: example.com\r\n"
+		"Content-Length: -5\r\n"
+		"\r\n";
+
+	std::cout << "Testing valid GET request...\n";
+	HttpRequest request1 = parseHttpRequest(testRequest1);
+	if (request1.isValid) {
+		std::cout << "Parsed successfully!\n";
+		std::cout << "Method: " << request1.method << std::endl;
+		std::cout << "path: " << request1.path << std::endl;
+		std::cout << "httpVersion: " << request1.httpVersion << std::endl;
+		std::cout << "body: " << request1.body << std::endl;
+		std::cout << "Headers:\n";
+		for (const auto& [key, value] : request1.headers) {
+			std::cout << "  " << key << ": " << value << "\n";
+		}
+		std::cout << std::endl;
+	}
+	else
+		std::cout << "Error: " << request1.errorMessage << "\n";
+
+	std::cout << "\nTesting valid POST request...\n";
+	HttpRequest request2 = parseHttpRequest(testRequest2);
+	if (request2.isValid) {
+		std::cout << "Parsed successfully!" << std::endl;
+		std::cout << "Method: " << request2.method << std::endl;
+		std::cout << "path: " << request2.path << std::endl;
+		std::cout << "httpVersion: " << request2.httpVersion << std::endl;
+		std::cout << "body: " << request2.body << std::endl;
+		std::cout << "Headers:\n";
+		for (const auto& [key, value] : request2.headers) {
+			std::cout << "  " << key << ": " << value << "\n";
+		}
+		std::cout << std::endl;
+	}
+	else
+		std::cout << "Error: " << request2.errorMessage << "\n";
+
+	std::cout << "\nTesting invalid method...\n";
+	HttpRequest request3 = parseHttpRequest(testRequest3);
+	if (!request3.isValid)
+		std::cout << "Error as expected: " << request3.errorMessage << "\n";
+	else
+		std::cout << "Unexpected success!\n";
+
+	std::cout << "\nTesting invalid Content-Length...\n";
+	HttpRequest request4 = parseHttpRequest(testRequest4);
+	if (!request4.isValid)
+		std::cout << "Error as expected: " << request4.errorMessage << "\n";
+	else
+		std::cout << "Unexpected success!\n";
+
 	return 0;
 }
