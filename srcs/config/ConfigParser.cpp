@@ -8,6 +8,28 @@
 //check if common ports work 
 //check incoherent values for hostname and so on
 
+/*
+to do: 
+DONE: 1. we can not have more than 1 location for the same path
+	location /images {...}
+	location /images {...} -> error: /images are the same path
+
+DONE 2. we can not have more than 1 root or alias directives in the same location or server sections
+
+DONE 3. we can not have alias and root directives in the same location section
+
+DONE 4. delete every location with a path that is not started with /
+(./images, images, images/) -> delete them only after checking the 1-3 rules
+
+(implemented) because Nginx will still print an error message for the 1-3 cases, but will ignore
+these locations if they are not starting from /
+
+DONE error_page directive path should also start from /
+
+(works this way) it is not necessary to start path with / for the root and alias
+
+*/
+
 std::string	ConfigParser::trim(const std::string &str) {
 	size_t	first = str.find_first_not_of(" \t"); //first not whitespace
 	if (first == std::string::npos) return "";
@@ -128,6 +150,9 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 				currentRoute.path = getLocationPath(line);
 			} else if (insideRoute) {
 				if (line.find("root") == 0) { //dir serving files
+					if (!currentRoute.root.empty()) {
+						throw std::runtime_error("Location path " + currentRoute.path + " has multiple root directives.");
+					}
 					currentRoute.root = trim(getValue(line));
 				} else if (line.find("index") == 0) { //default file
 					currentRoute.indexFile = trim(getValue(line));
@@ -149,6 +174,9 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 				} else if (line.find("upload_path") == 0) { //dir for file uploads
 					currentRoute.uploadPath = trim(getValue(line));
 				} else if (line.find("alias") == 0) {
+					if (!currentRoute.alias.empty()) {
+						throw std::runtime_error("Location path " + currentRoute.path + " has multiple alias directives.");
+					}
 					currentRoute.alias = trim(getValue(line));
 				}
 			}
@@ -167,10 +195,91 @@ void	ConfigParser::checkDuplicateServer(void) {
 	}
 }
 
+void	ConfigParser::checkDuplicateLocationPath(void) { //check for duplicate location paths
+	for (auto &server : servers) {
+		std::set<std::string>	paths;
+		for (auto &route : server.routes) {
+			if (paths.find(route.path) != paths.end()) {
+				throw std::runtime_error("Duplicate Location Path Found: " + route.path);
+			}
+			paths.insert(route.path);
+		}
+	}
+}
+
+void	ConfigParser::checkRootAlias(void) { //some checks happen in parsing before
+	for (auto &server : servers) {
+		bool	hasRoot = false;
+		bool	hasAlias = false;
+
+		for (auto & route : server.routes) {
+			int	rootCount = (route.root.empty() ? 0 : 1); //1 if root exists, 0 if not
+			int	aliasCount = (route.alias.empty() ? 0 : 1); //1 if alias exists, 0 if not
+
+			//check for both root and alias in same location
+			if (rootCount > 0 && aliasCount > 0) {
+				throw std::runtime_error("Location path " + route.path + " cannot have both root and alias directives.");
+			}
+
+			//check for duplicate Server root
+			if (!route.root.empty()) {
+				if (hasRoot) {
+					throw std::runtime_error("Server contains multiple root directives.");
+				}
+				hasRoot = true;
+			}
+			//check for duplicate Server alias
+			if (!route.alias.empty()) {
+				if (hasAlias) {
+					throw std::runtime_error("Server contains multiple alias directives.");
+				}
+				hasAlias = true;
+			}
+		}
+	}
+}
+
+void	ConfigParser::checkErrorPagesPath(void) { //ensures error_page paths start with '/'
+	for (auto & server : servers) {
+		for (auto & errorPage : server.errorPages) {
+			if (errorPage.second[0] != '/') {
+				throw std::runtime_error("Error page path must start with '/': " + errorPage.second);
+			}
+		}
+	}
+}
+
+void	ConfigParser::removeInvalidLocationPath() { //creates a new list of routes and only adds valid ones
+	for (auto &server : servers) {
+		auto &routes = server.routes;
+
+		std::vector<Route> validRoutes;
+
+		//get valid routes
+		for (const auto &route : routes) {
+			if (!route.path.empty() && route.path[0] == '/') {
+				validRoutes.push_back(route);
+			}
+		}
+
+		//replace old routes with just the valid ones
+		routes = std::move(validRoutes); //more efficient than routes = validRoutes
+	}
+}
+
+//play around with config file to test!
+void	ConfigParser::checkingFunction(void) {
+	checkDuplicateServer();
+	checkDuplicateLocationPath();
+	checkRootAlias();
+	checkErrorPagesPath();
+	removeInvalidLocationPath();
+}
+
 void	ConfigParser::tester(const std::string &inFile) {
 	ConfigParser parser;
 	parser.parseConfigFile(inFile);
-	parser.checkDuplicateServer();
+	parser.checkingFunction();
 
 	for (const auto &server : parser.servers) {
 		std::cout << "\nServer on " << server.host << ":" << server.port << "\n";
@@ -218,5 +327,4 @@ void	ConfigParser::tester(const std::string &inFile) {
 			if (!route.uploadPath.empty()) std::cout << "    Upload Path: " << route.uploadPath << "\n";
 		}
 	}
-
 }

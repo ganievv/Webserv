@@ -19,9 +19,9 @@ int	main(int argc, char **argv)
 
 	try {
 		std::string	config_path = getConfigPath(argc, argv);
-		//parser.tester(config_path); //for printing (has dup check call inside)
-		parser.parseConfigFile(config_path); //no prints, needs dup check called after
-		parser.checkDuplicateServer();
+		// parser.tester(config_path); //for printing (has checking call inside)
+		parser.parseConfigFile(config_path); //no prints, needs checking called after
+		parser.checkingFunction();
 
 		// httpRequestTester(); //prints the tests
 
