@@ -44,6 +44,9 @@ int	main(int argc, char **argv)
 					//HttpRequest request;
 					//Response response;
 					//const serverConfig& server = response.chooseServer(request, parser.servers);
+					//response.formResponse(request, server, status_code_info);				
+					//response.sendResponse(poller.poll_fds[i].fd);
+					//std::cout << "\nresponse is send\n";
 				}
 			}
 		}
