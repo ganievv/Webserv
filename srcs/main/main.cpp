@@ -7,8 +7,11 @@ int	main(int argc, char **argv)
 	Poller			poller;
 	Connection		connection;
 
+	std::string	config_path = getConfigPath(argc, argv);
+	std::map<int, std::string> status_code_info;
+	initStatusCodeInfo(status_code_info);
+
 	try {
-		std::string	config_path = getConfigPath(argc, argv);
 		// parser.tester(config_path); //for printing (has checking call inside)
 		parser.parseConfigFile(config_path); //no prints, needs checking called after
 		parser.checkingFunction();
