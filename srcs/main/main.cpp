@@ -41,6 +41,9 @@ int	main(int argc, char **argv)
 					//form response
 					//send response
 					connection.handleClientFd(poller.poll_fds[i]); // test for printing the request data
+					//HttpRequest request;
+					//Response response;
+					//const serverConfig& server = response.chooseServer(request, parser.servers);
 				}
 			}
 		}
