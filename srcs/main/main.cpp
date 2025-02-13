@@ -43,8 +43,9 @@ int	main(int argc, char **argv)
 					connection.handleClientFd(poller.poll_fds[i]); // test for printing the request data
 					//HttpRequest request;
 					//Response response;
-					//const serverConfig& server = response.chooseServer(request, parser.servers);
-					//response.formResponse(request, server, status_code_info);				
+					//response.testInitRequest(request);
+					//response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
+					//response.formResponse(request, status_code_info);				
 					//response.sendResponse(poller.poll_fds[i].fd);
 					//std::cout << "\nresponse is send\n";
 				}

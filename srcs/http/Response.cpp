@@ -27,19 +27,31 @@ std::string	Response::findHeaderValue(const std::string& name,
 	return value;
 }
 
-const serverConfig&	Response::chooseServer(const HttpRequest& request,
-	const std::vector<serverConfig>& servers) const
+void	Response::chooseServer(int fd, const HttpRequest& request,
+	std::vector<serverConfig>& servers)
 {
-	std::string value = findHeaderValue("Host", request.headers);
+	struct sockaddr_in client_address;
+	socklen_t		add_len = sizeof(client_address);
+	int res = getsockname(fd, (struct sockaddr*)&client_address, &add_len);
+	if (res == -1)
+		return;
 
-	for (const auto& server : servers) {
+	serverConfig* first_match = nullptr;
+	std::string value = findHeaderValue("Host", request.headers);
+	for (auto& server : servers) {
+		if (client_address.sin_port != server.bind_addr.sin_port
+			|| client_address.sin_addr.s_addr != server.bind_addr.sin_addr.s_addr) continue;
+
+		if (!first_match)
+			first_match = &server;
 		for (const auto& name : server.serverNames ) {
-			if (name == value)
-				return server;
+			if (name == value) {
+				this->choosed_server = &server;
+				return;
+			}
 		}
 	}
-
-	return servers.front();
+	this->choosed_server = first_match;
 }
 
 void	Response::addHeader(const std::string& name,
@@ -49,30 +61,32 @@ void	Response::addHeader(const std::string& name,
 }
 
 void	Response::formResponse(const HttpRequest& request,
-	const serverConfig& server, const std::map<int, std::string>& status_code_info)
+	const std::map<int, std::string>& status_code_info)
 {
+	if (this->choosed_server == nullptr) return;
+
 	this->http_version = "HTTP/1.1";
 	//addHeader("Date", "");
 	addHeader("Server", "webserv/0.01");
 	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "close");
 
-	struct Route correct_route = findRouteInConfig(request.path, server);
+	struct Route correct_route = findRouteInConfig(request.path, *this->choosed_server);
 	//what if there will be '//' in the path ? 
-	std::string full_path = findFullPath(request.path, server, correct_route);
+	std::string full_path = findFullPath(request.path, *this->choosed_server, correct_route);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
-		formError(404, server, status_code_info.at(404));
+		formError(404, *this->choosed_server, status_code_info.at(404));
 	}
 	else {
 		if (request.method == "GET") {
-			prepareBody(full_path, correct_route, server, status_code_info);
+			prepareBody(full_path, correct_route, *this->choosed_server, status_code_info);
 		}
 		else if (request.method == "POST") {
 		}
 		else if (request.method == "DELETE") {
 		}
 		else {
-			formError(405, server, status_code_info.at(405));
+			formError(405, *this->choosed_server, status_code_info.at(405));
 		}
 	}
 }
@@ -181,6 +195,8 @@ void	Response::addBody(const std::string& full_path)
 void	Response::sendResponse(int socket_fd)
 {
 	std::string response;
+
+	if (this->choosed_server == nullptr) return;
 
 	response.reserve(1024);
 	response = http_version + " " + status_code + " "

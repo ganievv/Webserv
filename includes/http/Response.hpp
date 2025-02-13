@@ -6,6 +6,8 @@ struct HttpRequest;
 class Response
 {
 	private:
+		serverConfig	*choosed_server = nullptr;
+
 		std::string http_version;
 		std::string status_code;
 		std::string reason_phrase;
@@ -37,10 +39,10 @@ class Response
 		std::string findHeaderValue(const std::string& name,
 			const std::map<std::string, std::string>& headers) const;
 
-		const serverConfig&	chooseServer(const HttpRequest& request,
-			const std::vector<serverConfig>& servers) const;
+		void	chooseServer(int fd, const HttpRequest& request,
+			std::vector<serverConfig>& servers);
 
-		void	formResponse(const HttpRequest& request, const serverConfig& server,
+		void	formResponse(const HttpRequest& request,
 			const std::map<int, std::string>& status_code_info);
 
 		void	sendResponse(int socket_fd);
