@@ -18,13 +18,7 @@ struct HttpRequest {
 	std::string	errorMessage;
 };
 
-// // class Request
-// // {
-// // 	public:
-// // 	private:
-// // };
-
 HttpRequest	parseHttpRequest(const std::string &rawRequest);
-int	httpRequestTester(void);
+void		testParseHttpRequest(void);
 
 #endif
