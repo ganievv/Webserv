@@ -58,9 +58,7 @@ void	Sockets::bindSocket(int sock_fd, const std::string& server_name,
 	unsigned short server_port = convertStrToUShort(server.port);
 	server.bind_addr.sin_port = htons(server_port);
 
-	std::string str_ip = (server.host.empty() ? "0.0.0.0" : server.host);
-
-	server.bind_addr.sin_addr = convertStrIpToBinIP(str_ip, server_name, server.port);
+	server.bind_addr.sin_addr = convertStrIpToBinIP(server.host, server_name, server.port);
 
 	if (bind(sock_fd, (struct sockaddr *)&server.bind_addr, sizeof(server.bind_addr)) == -1)
 		error_exit("failed to bind a socket", server_name);
@@ -68,7 +66,20 @@ void	Sockets::bindSocket(int sock_fd, const std::string& server_name,
 
 void	Sockets::initSockets(std::vector<serverConfig>& servers)
 {
+	std::vector<std::string> to_bind;
+
+	//add default IP
 	for (auto& server : servers) {
+		if (server.host.empty())
+			server.host = "0.0.0.0";
+	}
+
+	for (auto& server : servers) {
+
+		//skip the same host:port endpoints
+		std::string endpoint = server.host + ":" + server.port;
+		if (std::find(to_bind.begin(), to_bind.end(), endpoint) != to_bind.end()) continue;
+		else to_bind.push_back(endpoint);
 
 		std::string server_name = "";
 		if (!server.serverNames.empty())
@@ -112,4 +123,8 @@ void	Sockets::initSockets(std::vector<serverConfig>& servers)
 		 */
 		server_fds.push_back(fd);
 	}
+	for (const auto& endpoint : to_bind) {
+		std::cout << "binded endpoint: " << endpoint << "\n";
+	}
+	std::cout << "server_fds.size: " << server_fds.size() << "\n";
 }
