@@ -17,13 +17,17 @@ class Response
 		std::string body = "";
 
 		void	addHeader(const std::string& name, const std::string& value);
-		void	addBody(const std::string& file_path);
+		bool	addBody(const std::string& file_path, bool is_bin);
 		void	formError(int code, const std::string& error_message);
 		void	findRouteInConfig(const std::string& request_path);
 		std::string	findFullPath(const std::string& request_path);
 
 		void	handleGET(std::string& full_path,
-				const std::map<int, std::string>& status_code_info);
+			const std::map<int, std::string>& status_code_info);
+		void	handleDirRequest(std::string& full_path,
+			const std::map<int, std::string>& status_code_info);
+		void	serveFile(const std::string& full_path,
+			const std::map<int, std::string>& status_code_info);
 
 	public:
 		void	testInitRequest(HttpRequest& request);

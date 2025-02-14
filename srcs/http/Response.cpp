@@ -3,7 +3,7 @@
 void	Response::testInitRequest(HttpRequest& request)
 {
 	request.method = "GET";
-	request.path = "/api";
+	request.path = "/";
 	request.httpVersion = "HTTP/1.1";
 
 	request.headers.insert(std::pair("Host", "localhost"));
@@ -70,7 +70,6 @@ void	Response::formResponse(const HttpRequest& request,
 	this->http_version = "HTTP/1.1";
 	//addHeader("Date", "");
 	addHeader("Server", "webserv/0.01");
-	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "close");
 
 	findRouteInConfig(request.path);
@@ -120,40 +119,48 @@ std::string Response::findFullPath(const std::string& request_path)
 void	Response::handleGET(std::string& full_path,
 	const std::map<int, std::string>& status_code_info)
 {
-	if (std::filesystem::is_directory(full_path)) {
+	if (std::filesystem::is_directory(full_path))
+		handleDirRequest(full_path, status_code_info);
+	else if (std::filesystem::is_regular_file(full_path))
+		serveFile(full_path, status_code_info);
+	else
+		formError(403, status_code_info.at(403));
+}
 
-		std::string index_file = "index.html";
-		if (choosed_route && !choosed_route->indexFile.empty())
-			index_file = choosed_route->indexFile;
+void	Response::handleDirRequest(std::string& full_path,
+	const std::map<int, std::string>& status_code_info)
+{
+	std::string index_file = "index.html";
+	if (choosed_route && !choosed_route->indexFile.empty())
+		index_file = choosed_route->indexFile;
 
-		std::string tmp = full_path + index_file;
-		if (std::filesystem::exists(tmp)
-			&& std::filesystem::is_regular_file(tmp)) {
-			full_path = tmp;
-			//addBody()
-			//return
+	std::string tmp = full_path + index_file; // full_path ends with '/' ?
+	if (std::filesystem::exists(tmp)
+		&& std::filesystem::is_regular_file(tmp)) {
+		serveFile(tmp, status_code_info);
+	}
+	else {
+		if (choosed_route && choosed_route->autoindex) {
+			//this->body = generateAutoindexHTML(full_path);
 		}
 		else {
-			if (choosed_route && choosed_route->autoindex) {
-				//generate html file
-				//addBody()
-				//return
-			}
-			else {
-				formError(403, status_code_info.at(403));
-				return;
-			}
+			formError(403, status_code_info.at(403));
 		}
-
 	}
-	else if (std::filesystem::is_regular_file(full_path)) {
-		addBody(full_path);
+}
+
+void	Response::serveFile(const std::string& full_path,
+	const std::map<int, std::string>& status_code_info)
+{
+	if (addBody(full_path, true)) {
 		this->status_code = "200";
 		this->reason_phrase = status_code_info.at(200);
 		addHeader("Content-Length", std::to_string(this->body.size()));
+		//choose file extension ?
 	}
-	else
-		formError(403, status_code_info.at(403));
+	else {
+		formError(404, status_code_info.at(404));
+	}
 }
 
 void	Response::formError(int code, const std::string& error_message)
@@ -174,21 +181,28 @@ void	Response::formError(int code, const std::string& error_message)
 
 	this->status_code = std::to_string(code);
 	this->reason_phrase = error_message;
-	addBody(error_file_path);
+	addBody(error_file_path, true);
+	addHeader("Content-Type", "text/html");
+	//or search an extension of a file and add
 	addHeader("Content-Length", std::to_string(this->body.size()));
 }
 
-void	Response::addBody(const std::string& full_path)
+bool	Response::addBody(const std::string& full_path, bool is_bin)
 {
-	std::ifstream file(full_path);
+	std::ifstream file(full_path, (is_bin ? std::ios::binary : std::ios::in));
 
 	if (file) {
 		std::stringstream buffer;
 		buffer << file.rdbuf();
 		this->body = buffer.str();
+		//this->body.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		file.close();
 	}
-
+	else {
+		this->body = "<html><body><h1>404 Not Found</h1></body></html>";
+		return false;
+	}
+	return true;
 }
 
 void	Response::sendResponse(int socket_fd)
