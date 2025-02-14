@@ -39,15 +39,17 @@ void	Response::chooseServer(int fd, const HttpRequest& request,
 	serverConfig* first_match = nullptr;
 	std::string value = findHeaderValue("Host", request.headers);
 	for (auto& server : servers) {
-		if (client_address.sin_port != server.bind_addr.sin_port
-			|| client_address.sin_addr.s_addr != server.bind_addr.sin_addr.s_addr) continue;
-
-		if (!first_match)
-			first_match = &server;
-		for (const auto& name : server.serverNames ) {
-			if (name == value) {
-				this->choosed_server = &server;
-				return;
+		if (client_address.sin_port == server.bind_addr.sin_port
+			&& (client_address.sin_addr.s_addr == server.bind_addr.sin_addr.s_addr
+				|| server.bind_addr.sin_addr.s_addr == 0))
+		{
+			if (!first_match)
+				first_match = &server;
+			for (const auto& name : server.serverNames ) {
+				if (name == value) {
+					this->choosed_server = &server;
+					return;
+				}
 			}
 		}
 	}
@@ -71,7 +73,7 @@ void	Response::formResponse(const HttpRequest& request,
 	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "close");
 
-	struct Route correct_route = findRouteInConfig(request.path, *this->choosed_server);
+	struct Route correct_route = findRouteInConfig(request.path, *this->choosed_server); // ?
 	//what if there will be '//' in the path ? 
 	std::string full_path = findFullPath(request.path, *this->choosed_server, correct_route);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
@@ -98,11 +100,11 @@ struct Route	Response::findRouteInConfig(const std::string& request_path,
 	for (const auto& route: server.routes) {
 		if (request_path.compare(0, route.path.size(), route.path) == 0) {
 			if (route.path.size() > correct_route.path.size())
-				correct_route = route;
+				correct_route = route; // ? not a deep copy !!!
 		}
 	}
 
-	return correct_route;
+	return correct_route;  // ? not a deep copy !!!
 }
 
 std::string Response::findFullPath(const std::string& request_path,
