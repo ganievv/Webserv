@@ -3,7 +3,7 @@
 void	Response::testInitRequest(HttpRequest& request)
 {
 	request.method = "GET";
-	request.path = "/";
+	request.path = "/images/static/png/hello.png";
 	request.httpVersion = "HTTP/1.1";
 
 	request.headers.insert(std::pair("Host", "localhost"));
@@ -73,64 +73,58 @@ void	Response::formResponse(const HttpRequest& request,
 	addHeader("Content-Type", "text/html");
 	addHeader("Connection", "close");
 
-	struct Route correct_route = findRouteInConfig(request.path, *this->choosed_server); // ?
-	//what if there will be '//' in the path ? 
-	std::string full_path = findFullPath(request.path, *this->choosed_server, correct_route);
+	findRouteInConfig(request.path);
+	std::string full_path = findFullPath(request.path);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
-		formError(404, *this->choosed_server, status_code_info.at(404));
+		formError(404, status_code_info.at(404));
 	}
 	else {
 		if (request.method == "GET") {
-			prepareBody(full_path, correct_route, *this->choosed_server, status_code_info);
+			handleGET(full_path, status_code_info);
 		}
 		else if (request.method == "POST") {
 		}
 		else if (request.method == "DELETE") {
 		}
 		else {
-			formError(405, *this->choosed_server, status_code_info.at(405));
+			formError(405, status_code_info.at(405));
 		}
 	}
 }
 
-struct Route	Response::findRouteInConfig(const std::string& request_path,
-	const serverConfig& server)
+void	Response::findRouteInConfig(const std::string& request_path)
 {
-	struct Route correct_route;
-	for (const auto& route: server.routes) {
+	for (auto& route: choosed_server->routes) {
 		if (request_path.compare(0, route.path.size(), route.path) == 0) {
-			if (route.path.size() > correct_route.path.size())
-				correct_route = route; // ? not a deep copy !!!
+			if (choosed_route == nullptr
+				|| (route.path.size() > choosed_route->path.size()))
+				choosed_route = &route;
 		}
 	}
-
-	return correct_route;  // ? not a deep copy !!!
 }
 
-std::string Response::findFullPath(const std::string& request_path,
-	const serverConfig& server, const struct Route& correct_route)
+std::string Response::findFullPath(const std::string& request_path)
 {
 	//join the request path with the root or alias path
 	std::string full_path = "";
-	if (!server.root.empty())
-		full_path = server.root + request_path;
-	if (!correct_route.root.empty())
-		full_path = correct_route.root + request_path;
-	else if (!correct_route.alias.empty())
-		full_path = correct_route.alias + request_path.substr(correct_route.path.size()); // size+1 ?
+	if (!choosed_server->root.empty())
+		full_path = choosed_server->root + request_path;
+	if (choosed_route && !choosed_route->root.empty())
+		full_path = choosed_route->root + request_path;
+	else if (choosed_route && !choosed_route->alias.empty())
+		full_path = choosed_route->alias + request_path.substr(choosed_route->path.size()); // size+1 ?
 
 	return full_path;
 }
 
-void	Response::prepareBody(std::string& full_path, const struct Route& correct_route,
-	const serverConfig& server, const std::map<int, std::string>& status_code_info)
+void	Response::handleGET(std::string& full_path,
+	const std::map<int, std::string>& status_code_info)
 {
 	if (std::filesystem::is_directory(full_path)) {
 
 		std::string index_file = "index.html";
-		if (!correct_route.path.empty() 
-			&& !correct_route.indexFile.empty())
-			index_file = correct_route.indexFile;
+		if (choosed_route && !choosed_route->indexFile.empty())
+			index_file = choosed_route->indexFile;
 
 		std::string tmp = full_path + index_file;
 		if (std::filesystem::exists(tmp)
@@ -140,13 +134,13 @@ void	Response::prepareBody(std::string& full_path, const struct Route& correct_r
 			//return
 		}
 		else {
-			if (!correct_route.path.empty() && correct_route.autoindex) {
+			if (choosed_route && choosed_route->autoindex) {
 				//generate html file
 				//addBody()
 				//return
 			}
 			else {
-				formError(403, server, status_code_info.at(403));
+				formError(403, status_code_info.at(403));
 				return;
 			}
 		}
@@ -159,18 +153,17 @@ void	Response::prepareBody(std::string& full_path, const struct Route& correct_r
 		addHeader("Content-Length", std::to_string(this->body.size()));
 	}
 	else
-		formError(403, server, status_code_info.at(403));
+		formError(403, status_code_info.at(403));
 }
 
-void	Response::formError(int code, const serverConfig& server,
-	const std::string& error_message)
+void	Response::formError(int code, const std::string& error_message)
 {
 	std::string error_file_path = "./website/errors/" + std::to_string(code) + ".html";
 
-	const auto& it = server.errorPages.find(code);
-	if (it != server.errorPages.end()) {
-		if (!server.root.empty()) {
-			error_file_path = server.root + it->second;
+	const auto& it = choosed_server->errorPages.find(code);
+	if (it != choosed_server->errorPages.end()) {
+		if (!choosed_server->root.empty()) {
+			error_file_path = choosed_server->root + it->second;
 			//check if it exists and if it is a file
 		}
 	}

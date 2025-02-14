@@ -7,6 +7,7 @@ class Response
 {
 	private:
 		serverConfig	*choosed_server = nullptr;
+		struct Route	*choosed_route = nullptr;
 
 		std::string http_version;
 		std::string status_code;
@@ -16,23 +17,14 @@ class Response
 		std::string body = "";
 
 		void	addHeader(const std::string& name, const std::string& value);
-
 		void	addBody(const std::string& file_path);
+		void	formError(int code, const std::string& error_message);
+		void	findRouteInConfig(const std::string& request_path);
+		std::string	findFullPath(const std::string& request_path);
 
-		struct Route	findRouteInConfig(const std::string& request_path,
-				const serverConfig& server);
-
-		std::string	findFullPath(const std::string& request_path,
-				const serverConfig& server,
-				const struct Route& correct_route);
-
-		void	prepareBody(std::string& full_path,
-				const struct Route& correct_route,
-				const serverConfig& server,
+		void	handleGET(std::string& full_path,
 				const std::map<int, std::string>& status_code_info);
 
-		void	formError(int code, const serverConfig& server,
-			const std::string& error_message);
 	public:
 		void	testInitRequest(HttpRequest& request);
 
