@@ -3,7 +3,7 @@
 void	Response::testInitRequest(HttpRequest& request)
 {
 	request.method = "GET";
-	request.path = "/images/static/png/hello.png";
+	request.path = "/api";
 	request.httpVersion = "HTTP/1.1";
 
 	request.headers.insert(std::pair("Host", "localhost"));
@@ -160,11 +160,15 @@ void	Response::formError(int code, const std::string& error_message)
 {
 	std::string error_file_path = "./website/errors/" + std::to_string(code) + ".html";
 
-	const auto& it = choosed_server->errorPages.find(code);
-	if (it != choosed_server->errorPages.end()) {
-		if (!choosed_server->root.empty()) {
-			error_file_path = choosed_server->root + it->second;
-			//check if it exists and if it is a file
+	if (choosed_server) {
+		const auto& it = choosed_server->errorPages.find(code);
+		if (it != choosed_server->errorPages.end()) {
+			if (!choosed_server->root.empty()) {
+				std::string tmp = choosed_server->root + it->second;
+				if (std::filesystem::exists(tmp)
+					&& std::filesystem::is_regular_file(tmp))
+					error_file_path = tmp;
+			}
 		}
 	}
 
