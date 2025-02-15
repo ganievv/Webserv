@@ -134,7 +134,7 @@ void	Response::handleDirRequest(std::string& full_path,
 	if (choosed_route && !choosed_route->indexFile.empty())
 		index_file = choosed_route->indexFile;
 
-	std::string tmp = full_path + index_file; // full_path ends with '/' ?
+	std::string tmp = full_path + "/" + index_file;
 	if (std::filesystem::exists(tmp)
 		&& std::filesystem::is_regular_file(tmp)) {
 		serveFile(tmp, status_code_info);
