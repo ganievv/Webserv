@@ -56,14 +56,12 @@ void	Response::chooseServer(int fd, const HttpRequest& request,
 	this->choosed_server = first_match;
 }
 
-void	Response::addHeader(const std::string& name,
-	const std::string& value)
+void	Response::addHeader(const std::string& name, const std::string& value)
 {
 	headers.insert(std::pair<std::string, std::string>(name, value));
 }
 
-void	Response::formResponse(const HttpRequest& request,
-	const std::map<int, std::string>& status_code_info)
+void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 {
 	if (this->choosed_server == nullptr) return;
 
@@ -75,18 +73,18 @@ void	Response::formResponse(const HttpRequest& request,
 	findRouteInConfig(request.path);
 	std::string full_path = findFullPath(request.path);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
-		formError(404, status_code_info.at(404));
+		formError(404, webserv.status_code_info.at(404));
 	}
 	else {
 		if (request.method == "GET") {
-			handleGET(full_path, status_code_info);
+			handleGET(full_path, webserv);
 		}
 		else if (request.method == "POST") {
 		}
 		else if (request.method == "DELETE") {
 		}
 		else {
-			formError(405, status_code_info.at(405));
+			formError(405, webserv.status_code_info.at(405));
 		}
 	}
 }
@@ -116,19 +114,17 @@ std::string Response::findFullPath(const std::string& request_path)
 	return full_path;
 }
 
-void	Response::handleGET(std::string& full_path,
-	const std::map<int, std::string>& status_code_info)
+void	Response::handleGET(std::string& full_path, const Webserv& webserv)
 {
 	if (std::filesystem::is_directory(full_path))
-		handleDirRequest(full_path, status_code_info);
+		handleDirRequest(full_path, webserv);
 	else if (std::filesystem::is_regular_file(full_path))
-		serveFile(full_path, status_code_info);
+		serveFile(full_path, webserv);
 	else
-		formError(403, status_code_info.at(403));
+		formError(403, webserv.status_code_info.at(403));
 }
 
-void	Response::handleDirRequest(std::string& full_path,
-	const std::map<int, std::string>& status_code_info)
+void	Response::handleDirRequest(std::string& full_path, const Webserv& webserv)
 {
 	std::string index_file = "index.html";
 	if (choosed_route && !choosed_route->indexFile.empty())
@@ -137,29 +133,28 @@ void	Response::handleDirRequest(std::string& full_path,
 	std::string tmp = full_path + "/" + index_file;
 	if (std::filesystem::exists(tmp)
 		&& std::filesystem::is_regular_file(tmp)) {
-		serveFile(tmp, status_code_info);
+		serveFile(tmp, webserv);
 	}
 	else {
 		if (choosed_route && choosed_route->autoindex) {
 			//this->body = generateAutoindexHTML(full_path);
 		}
 		else {
-			formError(403, status_code_info.at(403));
+			formError(403, webserv.status_code_info.at(403));
 		}
 	}
 }
 
-void	Response::serveFile(const std::string& full_path,
-	const std::map<int, std::string>& status_code_info)
+void	Response::serveFile(const std::string& full_path, const Webserv& webserv)
 {
 	if (addBody(full_path, true)) {
 		this->status_code = "200";
-		this->reason_phrase = status_code_info.at(200);
+		this->reason_phrase = webserv.status_code_info.at(200);
 		addHeader("Content-Length", std::to_string(this->body.size()));
 		//choose file extension ?
 	}
 	else {
-		formError(404, status_code_info.at(404));
+		formError(404, webserv.status_code_info.at(404));
 	}
 }
 
@@ -237,4 +232,15 @@ std::string Response::takeGMTTime()
 	std::size_t size = std::strftime(buff.data(), buff.size(), format, std::gmtime(&t));
 
 	return (size > 0) ? std::string(buff.data()) : "failed to check";
+}
+
+std::string	Response::checkContentType(std::string file, const Webserv& webserv)
+{
+	/**
+	 * file : ./website/inages/favicon.png
+	 */
+	(void)file;
+	(void)webserv;
+
+	return "";
 }

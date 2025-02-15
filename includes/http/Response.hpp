@@ -3,6 +3,7 @@
 
 #include <ctime>
 
+struct Webserv;
 struct HttpRequest;
 
 class Response
@@ -22,28 +23,23 @@ class Response
 		bool	addBody(const std::string& file_path, bool is_bin);
 		void	formError(int code, const std::string& error_message);
 		void	findRouteInConfig(const std::string& request_path);
-		std::string	findFullPath(const std::string& request_path);
-		std::string takeGMTTime();
+		void	handleGET(std::string& full_path, const Webserv& webserv);
+		void	handleDirRequest(std::string& full_path, const Webserv& webserv);
+		void	serveFile(const std::string& full_path, const Webserv& webserv);
 
-		void	handleGET(std::string& full_path,
-			const std::map<int, std::string>& status_code_info);
-		void	handleDirRequest(std::string& full_path,
-			const std::map<int, std::string>& status_code_info);
-		void	serveFile(const std::string& full_path,
-			const std::map<int, std::string>& status_code_info);
+		std::string	findFullPath(const std::string& request_path);
+		std::string	checkContentType(std::string file, const Webserv& webserv);
+		std::string takeGMTTime();
 
 	public:
 		void	testInitRequest(HttpRequest& request);
 
 		std::string findHeaderValue(const std::string& name,
 			const std::map<std::string, std::string>& headers) const;
-
 		void	chooseServer(int fd, const HttpRequest& request,
 			std::vector<serverConfig>& servers);
 
-		void	formResponse(const HttpRequest& request,
-			const std::map<int, std::string>& status_code_info);
-
+		void	formResponse(const HttpRequest& request, const Webserv& webserv);
 		void	sendResponse(int socket_fd);
 };
 
