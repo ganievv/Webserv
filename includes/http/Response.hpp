@@ -1,6 +1,8 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include <ctime>
+
 struct HttpRequest;
 
 class Response
@@ -21,6 +23,7 @@ class Response
 		void	formError(int code, const std::string& error_message);
 		void	findRouteInConfig(const std::string& request_path);
 		std::string	findFullPath(const std::string& request_path);
+		std::string takeGMTTime();
 
 		void	handleGET(std::string& full_path,
 			const std::map<int, std::string>& status_code_info);

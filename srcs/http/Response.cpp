@@ -68,7 +68,7 @@ void	Response::formResponse(const HttpRequest& request,
 	if (this->choosed_server == nullptr) return;
 
 	this->http_version = "HTTP/1.1";
-	//addHeader("Date", "");
+	addHeader("Date", takeGMTTime());
 	addHeader("Server", "webserv/0.01");
 	addHeader("Connection", "close");
 
@@ -226,4 +226,15 @@ void	Response::sendResponse(int socket_fd)
 	if (bytes_sent == -1) {
 		std::cerr << "failed to send a http request" << std::endl;
 	}
+}
+
+std::string Response::takeGMTTime()
+{
+	std::time_t t = std::time(nullptr);
+	const char format[] = "%a, %d %b %Y %H:%M:%S GMT";
+	std::vector<char> buff(100);
+
+	std::size_t size = std::strftime(buff.data(), buff.size(), format, std::gmtime(&t));
+
+	return (size > 0) ? std::string(buff.data()) : "failed to check";
 }
