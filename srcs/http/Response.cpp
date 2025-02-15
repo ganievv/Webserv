@@ -181,7 +181,9 @@ void	Response::formError(int code, const std::string& error_message)
 
 	this->status_code = std::to_string(code);
 	this->reason_phrase = error_message;
-	addBody(error_file_path, true);
+	if (!addBody(error_file_path, true))
+		this->body = "<html><body><h1>" + status_code + " "
+			+ reason_phrase + "</h1></body></html>";
 	addHeader("Content-Type", "text/html");
 	//or search an extension of a file and add
 	addHeader("Content-Length", std::to_string(this->body.size()));
@@ -197,12 +199,10 @@ bool	Response::addBody(const std::string& full_path, bool is_bin)
 		this->body = buffer.str();
 		//this->body.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 		file.close();
+		return true;
 	}
-	else {
-		this->body = "<html><body><h1>404 Not Found</h1></body></html>";
-		return false;
-	}
-	return true;
+
+	return false;
 }
 
 void	Response::sendResponse(int socket_fd)
