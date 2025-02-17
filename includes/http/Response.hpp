@@ -26,6 +26,7 @@ class Response
 		void	handleGET(std::string& full_path, const Webserv& webserv);
 		void	handleDirRequest(std::string& full_path, const Webserv& webserv);
 		void	serveFile(const std::string& full_path, const Webserv& webserv);
+		bool	isMethodAllowed(const std::string& method);
 
 		std::string	findFullPath(const std::string& request_path);
 		std::string	checkContentType(std::string file, const Webserv& webserv);

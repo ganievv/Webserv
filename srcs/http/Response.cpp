@@ -76,12 +76,12 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		formError(404, webserv.status_code_info.at(404));
 	}
 	else {
-		if (request.method == "GET") {
+		if (request.method == "GET" && isMethodAllowed(request.method)) {
 			handleGET(full_path, webserv);
 		}
-		else if (request.method == "POST") {
+		else if (request.method == "POST" && isMethodAllowed(request.method)) {
 		}
-		else if (request.method == "DELETE") {
+		else if (request.method == "DELETE" && isMethodAllowed(request.method)) {
 		}
 		else {
 			formError(405, webserv.status_code_info.at(405));
@@ -243,4 +243,19 @@ std::string	Response::checkContentType(std::string file, const Webserv& webserv)
 	(void)webserv;
 
 	return "";
+}
+
+bool	Response::isMethodAllowed(const std::string& method)
+{
+	/**
+	 * GET & POST are enabled by default
+	 */
+	if (!choosed_route || choosed_route->allowedMethods.empty()) {
+		return (method == "GET" || method == "POST");
+	}
+
+	const auto& it = std::find(choosed_route->allowedMethods.begin(),
+		choosed_route->allowedMethods.end(), method);
+
+	return (it != choosed_route->allowedMethods.end());
 }
