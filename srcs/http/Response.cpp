@@ -73,7 +73,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	findRouteInConfig(request.path);
 	std::string full_path = findFullPath(request.path);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
-		formError(404, webserv.status_code_info.at(404));
+		formError(404, webserv);
 	}
 	else {
 		if (request.method == "GET" && isMethodAllowed(request.method)) {
@@ -84,7 +84,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		else if (request.method == "DELETE" && isMethodAllowed(request.method)) {
 		}
 		else {
-			formError(405, webserv.status_code_info.at(405));
+			formError(405, webserv);
 		}
 	}
 }
@@ -121,7 +121,7 @@ void	Response::handleGET(std::string& full_path, const Webserv& webserv)
 	else if (std::filesystem::is_regular_file(full_path))
 		serveFile(full_path, webserv);
 	else
-		formError(403, webserv.status_code_info.at(403));
+		formError(403, webserv);
 }
 
 void	Response::handleDirRequest(std::string& full_path, const Webserv& webserv)
@@ -140,7 +140,7 @@ void	Response::handleDirRequest(std::string& full_path, const Webserv& webserv)
 			//this->body = generateAutoindexHTML(full_path);
 		}
 		else {
-			formError(403, webserv.status_code_info.at(403));
+			formError(403, webserv);
 		}
 	}
 }
@@ -151,14 +151,16 @@ void	Response::serveFile(const std::string& full_path, const Webserv& webserv)
 		this->status_code = "200";
 		this->reason_phrase = webserv.status_code_info.at(200);
 		addHeader("Content-Length", std::to_string(this->body.size()));
-		//choose file extension ?
+
+		std::string type = checkContentType(full_path, webserv);
+		if (!type.empty()) addHeader("Content-Type", type); // + "; charset=utf-8" ?
 	}
 	else {
-		formError(404, webserv.status_code_info.at(404));
+		formError(404, webserv);
 	}
 }
 
-void	Response::formError(int code, const std::string& error_message)
+void	Response::formError(int code, const Webserv& webserv)
 {
 	std::string error_file_path = "./website/errors/" + std::to_string(code) + ".html";
 
@@ -175,12 +177,17 @@ void	Response::formError(int code, const std::string& error_message)
 	}
 
 	this->status_code = std::to_string(code);
-	this->reason_phrase = error_message;
-	if (!addBody(error_file_path, true))
+	this->reason_phrase = webserv.status_code_info.at(code);
+	if (!addBody(error_file_path, true)) {
 		this->body = "<html><body><h1>" + status_code + " "
 			+ reason_phrase + "</h1></body></html>";
-	addHeader("Content-Type", "text/html");
-	//or search an extension of a file and add
+		addHeader("Content-Type", "text/html");
+	}
+	else {
+		std::string type = checkContentType(error_file_path, webserv);
+		if (!type.empty()) addHeader("Content-Type", type); // + "; charset=utf-8" ?
+	}
+
 	addHeader("Content-Length", std::to_string(this->body.size()));
 }
 
@@ -236,13 +243,11 @@ std::string Response::takeGMTTime()
 
 std::string	Response::checkContentType(std::string file, const Webserv& webserv)
 {
-	/**
-	 * file : ./website/inages/favicon.png
-	 */
-	(void)file;
-	(void)webserv;
+	std::string extension = std::filesystem::path(file).extension().string();
 
-	return "";
+	const auto& it = webserv.content_types.find(extension);
+
+	return (it != webserv.content_types.end() ? it->second : "");
 }
 
 bool	Response::isMethodAllowed(const std::string& method)

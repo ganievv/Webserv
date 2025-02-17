@@ -21,7 +21,7 @@ class Response
 
 		void	addHeader(const std::string& name, const std::string& value);
 		bool	addBody(const std::string& file_path, bool is_bin);
-		void	formError(int code, const std::string& error_message);
+		void	formError(int code, const Webserv& webserv);
 		void	findRouteInConfig(const std::string& request_path);
 		void	handleGET(std::string& full_path, const Webserv& webserv);
 		void	handleDirRequest(std::string& full_path, const Webserv& webserv);
