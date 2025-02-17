@@ -66,7 +66,10 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	if (this->choosed_server == nullptr) return;
 
 	this->http_version = "HTTP/1.1";
-	addHeader("Date", takeGMTTime());
+
+	std::string	time = takeGMTTime();
+	if (!time.empty()) addHeader("Date", time);
+
 	addHeader("Server", "webserv/0.01");
 	addHeader("Connection", "close");
 
@@ -237,8 +240,7 @@ std::string Response::takeGMTTime()
 	std::vector<char> buff(100);
 
 	std::size_t size = std::strftime(buff.data(), buff.size(), format, std::gmtime(&t));
-
-	return (size > 0) ? std::string(buff.data()) : "failed to check";
+	return (size > 0) ? std::string(buff.data()) : "";
 }
 
 std::string	Response::checkContentType(std::string file, const Webserv& webserv)
@@ -246,7 +248,6 @@ std::string	Response::checkContentType(std::string file, const Webserv& webserv)
 	std::string extension = std::filesystem::path(file).extension().string();
 
 	const auto& it = webserv.content_types.find(extension);
-
 	return (it != webserv.content_types.end() ? it->second : "");
 }
 
@@ -261,6 +262,5 @@ bool	Response::isMethodAllowed(const std::string& method)
 
 	const auto& it = std::find(choosed_route->allowedMethods.begin(),
 		choosed_route->allowedMethods.end(), method);
-
 	return (it != choosed_route->allowedMethods.end());
 }
