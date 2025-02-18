@@ -16,6 +16,8 @@ void	initStatusCodeInfo(std::map<int, std::string>& inf)
 
 	inf[301] = "Moved Permanently";
 	inf[302] = "Found";
+	inf[307] = "Temporary Redirect";
+	inf[308] = "Permanent Redirect";
 
 	inf[400] = "Bad Request";
 	inf[401] = "Unauthorized";

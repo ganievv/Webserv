@@ -1,5 +1,10 @@
 #include "../../includes/webserv.hpp"
 
+/** 
+ * 		return;
+ *		autoindex onn;
+ * */
+
 void	Response::testInitRequest(HttpRequest& request)
 {
 	request.method = "GET";
@@ -74,6 +79,11 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	addHeader("Connection", "close");
 
 	findRouteInConfig(request.path);
+	if (choosed_route && !choosed_route->redirection.empty()) {
+		redirect(webserv);
+		return;
+	}
+
 	std::string full_path = findFullPath(request.path);
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
 		formError(404, webserv);
@@ -263,4 +273,19 @@ bool	Response::isMethodAllowed(const std::string& method)
 	const auto& it = std::find(choosed_route->allowedMethods.begin(),
 		choosed_route->allowedMethods.end(), method);
 	return (it != choosed_route->allowedMethods.end());
+}
+
+void	Response::redirect(const Webserv& webserv)
+{
+	const auto& redir_inf = choosed_route->redirection.begin();
+
+	const auto& code_info = webserv.status_code_info.find(redir_inf->first);
+	if (code_info == webserv.status_code_info.end()) {
+		formError(500, webserv);
+		return;
+	}
+
+	this->status_code = code_info->first;
+	this->reason_phrase = code_info->second;
+	addHeader("Location", redir_inf->second);
 }
