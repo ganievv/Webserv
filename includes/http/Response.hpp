@@ -28,6 +28,7 @@ class Response
 		void	serveFile(const std::string& full_path, const Webserv& webserv);
 		bool	isMethodAllowed(const std::string& method);
 		void	redirect(const Webserv& webserv);
+		void	generateAutoindexHTML(const std::string& full_path, const Webserv& webserv);
 
 		std::string	findFullPath(const std::string& request_path);
 		std::string	checkContentType(std::string file, const Webserv& webserv);

@@ -1,10 +1,5 @@
 #include "../../includes/webserv.hpp"
 
-/** 
- * 		return;
- *		autoindex onn;
- * */
-
 void	Response::testInitRequest(HttpRequest& request)
 {
 	request.method = "GET";
@@ -150,7 +145,7 @@ void	Response::handleDirRequest(std::string& full_path, const Webserv& webserv)
 	}
 	else {
 		if (choosed_route && choosed_route->autoindex) {
-			//this->body = generateAutoindexHTML(full_path);
+			generateAutoindexHTML(full_path, webserv);
 		}
 		else {
 			formError(403, webserv);
@@ -288,4 +283,60 @@ void	Response::redirect(const Webserv& webserv)
 	this->status_code = code_info->first;
 	this->reason_phrase = code_info->second;
 	addHeader("Location", redir_inf->second);
+}
+
+void	Response::generateAutoindexHTML(const std::string& full_path, const Webserv& webserv)
+{
+	std::string tmp_path = full_path;
+	if (!tmp_path.empty() && tmp_path.back() == '/') tmp_path.pop_back();
+
+	std::string main_dir = std::filesystem::path(tmp_path).filename().string();
+	if (!main_dir.empty()) main_dir += "/";
+
+	std::cout << "\n\nfull_path: " << full_path << "\n";
+	std::cout << "main_dir: " << main_dir << "\n\n";
+
+	body = R"(
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Index of )" + main_dir + R"(</title>
+		<style>
+			body {font-family: Arial, sans-serif;
+				background: linear-gradient(120deg,#141E30,#243B55);
+				color: white;height: 100vh;display: flex;
+				flex-direction: column;align-items: center; }
+			a {display: block;color:#007BFF;text-decoration: none;
+            	margin: 10px 0;font-size: 1.2rem;}
+        	a:hover {color:#0056b3;}
+		</style>
+	</head><body><h2>Index of )" + main_dir + R"(</h2><div id="file-list">)";
+
+	std::filesystem::path dir_path(full_path);
+	//if (dir_path.has_parent_path()) // exclude going out of the root (correct ?)
+	//	body += R"(<a href="../">../</a>)";
+
+	try {
+
+		for (const auto& entry : std::filesystem::directory_iterator(dir_path)) {
+
+			std::string filename = entry.path().filename().string();
+			if (entry.is_directory()) filename += "/";
+
+			body += "<a href=\"" + filename + "\">" + filename + "</a>";
+		}
+	}
+	catch(...) {
+		formError(500, webserv);
+		return;
+	}
+
+	body += "</div></body></html>";
+
+	this->status_code = "200";
+	this->reason_phrase = webserv.status_code_info.at(200);
+	addHeader("Content-Type", "text/html");
+	addHeader("Content-Length", std::to_string(this->body.size()));
 }
