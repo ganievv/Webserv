@@ -2,6 +2,7 @@
 #define RESPONSE_HPP
 
 #include <ctime>
+#include <sys/stat.h>
 
 struct Webserv;
 struct HttpRequest;
@@ -33,6 +34,7 @@ class Response
 		std::string	findFullPath(const std::string& request_path);
 		std::string	checkContentType(std::string file, const Webserv& webserv);
 		std::string takeGMTTime();
+		std::string checkLastWriteTime(const char *path);
 
 	public:
 		void	testInitRequest(HttpRequest& request);

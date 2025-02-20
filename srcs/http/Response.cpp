@@ -308,15 +308,19 @@ void	Response::generateAutoindexHTML(const std::string& full_path, const Webserv
 				background: linear-gradient(120deg,#141E30,#243B55);
 				color: white;height: 100vh;display: flex;
 				flex-direction: column;align-items: center; }
-			a {display: block;color:#007BFF;text-decoration: none;
-            	margin: 10px 0;font-size: 1.2rem;}
-        	a:hover {color:#0056b3;}
+			a{color:#007BFF;text-decoration: none;} a:hover {color:#0056b3;}
+			.container {min-width: 400px;}
+			.entry {display: flex;padding: 5px 0;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.2);}
+			.name {width: 250px;text-align: left;}
+			.date {width: 150px;text-align: left;}
+			.size {width: 100px;text-align: right;}}
 		</style>
-	</head><body><h2>Index of )" + main_dir + R"(</h2><div id="file-list">)";
+	</head><body><h2>Index of )" + main_dir + R"(</h2><div class="container">)";
 
 	std::filesystem::path dir_path(full_path);
-	//if (dir_path.has_parent_path()) // exclude going out of the root (correct ?)
-	//	body += R"(<a href="../">../</a>)";
+	if (dir_path.has_parent_path()) // exclude going out of the root (correct ?)
+		body += R"(<a href="../">../</a>)";
 
 	try {
 
@@ -325,7 +329,14 @@ void	Response::generateAutoindexHTML(const std::string& full_path, const Webserv
 			std::string filename = entry.path().filename().string();
 			if (entry.is_directory()) filename += "/";
 
-			body += "<a href=\"" + filename + "\">" + filename + "</a>";
+			std::string file_size = (entry.is_directory() ? "-"
+				: std::to_string(entry.file_size()));
+
+			std::string date = checkLastWriteTime(entry.path().c_str());
+
+			body += "<div class=\"entry\"><a class=\"name\" href=\""
+				+ filename + "\">" + filename + "</a><span class=\"date\">"
+				 + date + "</span><span class=\"size\">" + file_size + "</span></div>";
 		}
 	}
 	catch(...) {
@@ -339,4 +350,21 @@ void	Response::generateAutoindexHTML(const std::string& full_path, const Webserv
 	this->reason_phrase = webserv.status_code_info.at(200);
 	addHeader("Content-Type", "text/html");
 	addHeader("Content-Length", std::to_string(this->body.size()));
+}
+
+std::string Response::checkLastWriteTime(const char *path)
+{
+	std::string mod_time = "";
+	struct stat fileStat;
+
+	if (stat(path, &fileStat) == 0) {
+		time_t t = fileStat.st_mtime;
+		const char format[] = "%d-%b-%Y %H:%M";
+		char buff[50];
+
+		std::size_t size = std::strftime(buff, sizeof(buff),
+			format, std::gmtime(&t));
+		if (size > 0) mod_time = std::string(buff);
+	}
+	return mod_time;
 }
