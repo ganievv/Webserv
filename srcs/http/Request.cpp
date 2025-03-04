@@ -296,39 +296,95 @@ HttpRequest	parseHttpRequest(int clientFd) {
 
 void testParseHttpRequest(void) {
 
-	// std::string httpRequest = //chunked transfer encoding
+	// std::string httpRequest = //chunked complex normal
 	// 	"POST /api/data HTTP/1.1\r\n"
-	// 	"Host: api.example.com\r\n"
-	// 	"User-Agent: MyTestClient/2.0\r\n"
+	// 	"Host: example.com\r\n"
+	// 	"User-Agent: ChunkedClient/1.0\r\n"
 	// 	"Content-Type: application/json\r\n"
-	// 	"Accept: application/json\r\n"
 	// 	"Transfer-Encoding: chunked\r\n"
 	// 	"\r\n"
 	// 	"4\r\n"
-	// 	"Wiki\r\n"
+	// 	"{\"na\r\n"
+	// 	"6\r\n"
+	// 	"me\": \"\r\n"
+	// 	"6\r\n"
+	// 	"John D\r\n"
+	// 	"4\r\n"
+	// 	"oe\",\r\n"
+	// 	"3\r\n"
+	// 	"\"em\r\n"
 	// 	"5\r\n"
-	// 	"pedia\r\n"
+	// 	"ail\":\r\n"
+	// 	"5\r\n"
+	// 	"\"john\r\n"
+	// 	"6\r\n"
+	// 	".doe@r\n"
+	// 	"7\r\n"
+	// 	"example\r\n"
+	// 	"6\r\n"
+	// 	".com\",\r\n"
+	// 	"3\r\n"
+	// 	"\"ag\r\n"
+	// 	"6\r\n"
+	// 	"e\": 3}\r\n"
 	// 	"0\r\n"
 	// 	"\r\n";
 
-		std::string httpRequest = //content-length
-		"POST /api/data HTTP/1.1\r\n"
-		"Host: api.example.com\r\n"
-		"User-Agent: MyTestClient/2.0\r\n"
-		"cOnTEnt-type: application/json\r\n"
-		"Accept: application/json\r\n"
-		"Authorization: Bearer abcdef123456\r\n"
-		"cOnTEnt-lEngtH: 53\r\n"
-		"\r\n"
-		"{\"name\": \"John Doe\", \"email\": \"john.doe@example.com\"}";
+	std::string httpRequest = //chunked complex just \n
+		"POST /api/data HTTP/1.1\n"
+		"Host: example.com\n"
+		"User-Agent: ChunkedClient/1.0\n"
+		"Content-Type: application/json\n"
+		"Transfer-Encoding: chunked\n"
+		"\n"
+		"4\n"
+		"{\"na\n"
+		"6\n"
+		"me\": \"\n"
+		"6\n"
+		"John D\n"
+		"4\n"
+		"oe\",\n"
+		"3\n"
+		"\"em\n"
+		"5\n"
+		"ail\":\n"
+		"5\n"
+		"\"john\n"
+		"6\n"
+		".doe@r\n"
+		"7\n"
+		"example\n"
+		"6\n"
+		".com\",\n"
+		"3\n"
+		"\"ag\n"
+		"6\n"
+		"e\": 3}\n"
+		"0\n"
+		"\n";
 
-	// std::string httpRequest =
-	// 	"GET /index.html HTTP/1.1\r\n"
-	// 	"Host: www.example.com\r\n"
-	// 	"Connection: keep-alive\r\n"
-	// 	"conteNT-lENgth: 13\r\n"
+	// std::string httpRequest = // just \n instead of \r\n test
+	// 	"POST /api/data HTTP/1.1\n"
+	// 	"Host: api.example.com\n"
+	// 	"User-Agent: MyTestClient/2.0\n"
+	// 	"cOnTEnt-type: application/json\n"
+	// 	"Accept: application/json\n"
+	// 	"Authorization: Bearer abcdef123456\n"
+	// 	"cOnTEnt-lEngtH: 53\n"
+	// 	"\n"
+	// 	"{\"name\": \"John Doe\", \"email\": \"john.doe@example.com\"}";
+
+	// std::string httpRequest = //content-length
+	// 	"POST /api/data HTTP/1.1\r\n"
+	// 	"Host: api.example.com\r\n"
+	// 	"User-Agent: MyTestClient/2.0\r\n"
+	// 	"cOnTEnt-type: application/json\r\n"
+	// 	"Accept: application/json\r\n"
+	// 	"Authorization: Bearer abcdef123456\r\n"
+	// 	"cOnTEnt-lEngtH: 53\r\n"
 	// 	"\r\n"
-	// 	"Hello, world!";  // Simple body
+	// 	"{\"name\": \"John Doe\", \"email\": \"john.doe@example.com\"}";
 
 	int sv[2];
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1) {
@@ -347,6 +403,7 @@ void testParseHttpRequest(void) {
 	HttpRequest request = parseHttpRequest(sv[0]);
 		
 	// Output parsed results.
+	std::cout << "\npoll_fd: " << request.poll_fd.fd << "\n";
 	std::cout << "\nMethod: " << request.method << "\n";
 	std::cout << "Path: " << request.path << "\n";
 	std::cout << "HTTP Version: " << request.httpVersion << "\n";
