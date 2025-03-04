@@ -1,32 +1,17 @@
 #include "../../includes/webserv.hpp"
 
-// check for error codes in nginx
-
-//5 nginx behavior for duplicate directives in the same location or server section in config file
-
-//same port multiple times should not work, same IP and port on multiple servers should throw error, host:port chcek
-//check if common ports work 
-//check incoherent values for hostname and so on
-
 /*
-to do: 
-DONE: 1. we can not have more than 1 location for the same path
-	location /images {...}
-	location /images {...} -> error: /images are the same path
+TODO: 
 
-DONE 2. we can not have more than 1 root or alias directives in the same location or server sections
+1. (done) fix multiple root error in server, throws errors even if it's in seperate locaions
 
-DONE 3. we can not have alias and root directives in the same location section
+2. (done) throw error on random values on config file
+(may want to implement parsed value checking)
 
-DONE 4. delete every location with a path that is not started with /
-(./images, images, images/) -> delete them only after checking the 1-3 rules
+(done) 3. serers can't have the same name, but can have the same port
 
-(implemented) because Nginx will still print an error message for the 1-3 cases, but will ignore
-these locations if they are not starting from /
-
-DONE error_page directive path should also start from /
-
-(works this way) it is not necessary to start path with / for the root and alias
+4. use client_max_body_size directive from the config file
+when saving the body, if not specified use default value
 
 */
 
@@ -148,6 +133,8 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 				insideRoute = true;
 				currentRoute = Route();
 				currentRoute.path = getLocationPath(line);
+			} else if (!insideRoute) {
+				throw std::runtime_error("Incoherent values in Server in Config File: " + line);
 			} else if (insideRoute) {
 				if (line.find("root") == 0) { //dir serving files
 					if (!currentRoute.root.empty()) {
@@ -178,22 +165,17 @@ void	ConfigParser::parseConfigFile(const std::string &filename) { //builds list 
 						throw std::runtime_error("Location path " + currentRoute.path + " has multiple alias directives.");
 					}
 					currentRoute.alias = trim(getValue(line));
+				} else { // check inside route
+					throw std::runtime_error("Incoherent values in Route in Config File: " + line);
 				}
 			}
+		} else { //check for outside of server & root values
+			throw std::runtime_error("Incoherent values outside of Server in Config File: " + line);
 		}
 	}
 	file.close();
 }
 
-void	ConfigParser::checkDuplicateServer(void) {
-	for (size_t i = 0; i < servers.size(); i++) {
-		for (size_t j = i + 1; j < servers.size(); j++) {
-			if ((servers[i].host == servers[j].host) && (servers[i].port == servers[j].port)) {
-				throw std::runtime_error("Duplicate Server Configuration Found: Same Host and Same Port on multiple Servers!");
-			}
-		}
-	}
-}
 
 void	ConfigParser::checkDuplicateLocationPath(void) { //check for duplicate location paths
 	for (auto &server : servers) {
@@ -207,11 +189,22 @@ void	ConfigParser::checkDuplicateLocationPath(void) { //check for duplicate loca
 	}
 }
 
+//new, just cheks name
+void	ConfigParser::checkDuplicateServer(void) {
+	std::set<std::string>	seenNames;
+
+	for (size_t i = 0; i < servers.size(); i++) {
+		for (const std::string &name : servers[i].serverNames) {
+			if (seenNames.find(name) != seenNames.end()) {
+				throw std::runtime_error("Duplicate Server Configuration Found: Same server name on multiple Servers!");
+			}
+			seenNames.insert(name);
+		}
+	}
+}
+
 void	ConfigParser::checkRootAlias(void) { //some checks happen in parsing before
 	for (auto &server : servers) {
-		bool	hasRoot = false;
-		bool	hasAlias = false;
-
 		for (auto & route : server.routes) {
 			int	rootCount = (route.root.empty() ? 0 : 1); //1 if root exists, 0 if not
 			int	aliasCount = (route.alias.empty() ? 0 : 1); //1 if alias exists, 0 if not
@@ -222,18 +215,13 @@ void	ConfigParser::checkRootAlias(void) { //some checks happen in parsing before
 			}
 
 			//check for duplicate Server root
-			if (!route.root.empty()) {
-				if (hasRoot) {
-					throw std::runtime_error("Server contains multiple root directives.");
-				}
-				hasRoot = true;
+			if (rootCount > 1) {
+				throw std::runtime_error("Location path " + route.path + " contains multiple root directives.");
 			}
+
 			//check for duplicate Server alias
-			if (!route.alias.empty()) {
-				if (hasAlias) {
-					throw std::runtime_error("Server contains multiple alias directives.");
-				}
-				hasAlias = true;
+			if (aliasCount > 1) {
+				throw std::runtime_error("Location path " + route.path + " contains multiple alias directives.");
 			}
 		}
 	}
@@ -269,7 +257,7 @@ void	ConfigParser::removeInvalidLocationPath() { //creates a new list of routes 
 
 //play around with config file to test!
 void	ConfigParser::checkingFunction(void) {
-	//checkDuplicateServer(); there could be the same host:port in different server sections
+	checkDuplicateServer(); //name check
 	checkDuplicateLocationPath();
 	checkRootAlias();
 	checkErrorPagesPath();

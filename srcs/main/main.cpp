@@ -13,7 +13,7 @@ int	main(int argc, char **argv)
 	initContentTypes(webserv.content_types);
 
 	try {
-		// parser.tester(config_path); //for printing (has checking call inside)
+		// parser.tester(webserv.config_path); //for printing (has checking call inside)
 		parser.parseConfigFile(webserv.config_path); //no prints, needs checking called after
 		parser.checkingFunction();
 
