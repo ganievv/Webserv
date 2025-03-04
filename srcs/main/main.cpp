@@ -62,11 +62,13 @@ int	main(int argc, char **argv)
 				else {
 					Response response;
 					HttpRequest request = parseHttpRequest(poller.poll_fds[i].fd);
-					if (!request.isValid) continue;
-					printRequest(request);
-					response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
-					response.formResponse(request, webserv);
-					response.sendResponse(poller.poll_fds[i].fd);
+					if (request.isValid) {
+						printRequest(request);
+						response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
+						response.formResponse(request, webserv);
+						response.sendResponse(poller.poll_fds[i].fd);
+					}
+					poller.removeFd(i);
 				}
 			}
 		}

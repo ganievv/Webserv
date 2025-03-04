@@ -14,6 +14,7 @@ class Poller
 
 		void	initPoll(std::vector<int> &server_fds);
 		void	processPoll();
+		void	removeFd(int fd_index);
 };
 
 #endif

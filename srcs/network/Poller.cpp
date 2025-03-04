@@ -30,3 +30,15 @@ void	Poller::processPoll()
 	if (poll(poll_fds, nfds, TIMEOUT) == -1)
 		error_exit("failed to invoke poll function", "");
 }
+
+void	Poller::removeFd(int fd_index)
+{
+	if (fd_index < 0 || fd_index >= nfds) return;
+
+	close(poll_fds[fd_index].fd);
+
+	for (int i = fd_index; i < nfds - 1; ++i) {
+		poll_fds[i] = poll_fds[i + 1];
+	}
+	nfds--;
+}
