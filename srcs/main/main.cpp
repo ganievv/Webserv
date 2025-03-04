@@ -1,5 +1,28 @@
 #include "../../includes/webserv.hpp"
 
+void printRequest(HttpRequest& request)
+{
+	std::ofstream outFile("request.txt", std::ios::app);
+	if (!outFile) {
+		return;
+	}
+
+	outFile << "--------------------\n";
+	outFile << "poll_fd: " << request.poll_fd.fd << "\n";
+	outFile << "Method: " << request.method << "\n";
+	outFile << "Path: " << request.path << "\n";
+	outFile << "HTTP Version: " << request.httpVersion << "\n";
+
+	for (const auto& header : request.headers) {
+		outFile << header.first << ": " << header.second << "\n";
+	}
+
+	outFile << "Body: " << request.body << "\n";
+	outFile << "--------------------\n\n";
+
+	outFile.close();
+}
+
 int	main(int argc, char **argv)
 {
 	Webserv			webserv;
@@ -37,18 +60,13 @@ int	main(int argc, char **argv)
 					connection.handleServerFd(poller.poll_fds[i].fd, poller);
 				}
 				else {
-					//read data from the client socket (poller.poll_fds[i].fd)
-					//alalize request
-					//form response
-					//send response
-					connection.handleClientFd(poller.poll_fds[i]); // test for printing the request data
-					//HttpRequest request;
-					//Response response;
-					//response.testInitRequest(request);
-					//response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
-					//response.formResponse(request, webserv);
-					//response.sendResponse(poller.poll_fds[i].fd);
-					//std::cout << "\nresponse is send\n";
+					Response response;
+					HttpRequest request = parseHttpRequest(poller.poll_fds[i].fd);
+					if (!request.isValid) continue;
+					printRequest(request);
+					response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
+					response.formResponse(request, webserv);
+					response.sendResponse(poller.poll_fds[i].fd);
 				}
 			}
 		}
