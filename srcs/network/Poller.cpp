@@ -28,7 +28,7 @@ void	Poller::initPoll(std::vector<int> &server_fds)
 void	Poller::processPoll()
 {
 	if (poll(poll_fds, nfds, TIMEOUT) == -1)
-		error_exit("failed to invoke poll function", "");
+		std::cerr << "poll() failed: " << strerror(errno) << std::endl;
 }
 
 void	Poller::removeFd(int fd_index)
