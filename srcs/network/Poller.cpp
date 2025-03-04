@@ -31,7 +31,7 @@ void	Poller::processPoll()
 		std::cerr << "poll() failed: " << strerror(errno) << std::endl;
 }
 
-void	Poller::removeFd(int fd_index)
+void	Poller::removeFd(int& fd_index)
 {
 	if (fd_index < 0 || fd_index >= nfds) return;
 
@@ -41,4 +41,20 @@ void	Poller::removeFd(int fd_index)
 		poll_fds[i] = poll_fds[i + 1];
 	}
 	nfds--;
+	fd_index--;
+}
+
+bool	Poller::skipFd(bool is_server, int& fd_index)
+{
+	(void)is_server;
+	if (poll_fds[fd_index].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+		//if (!is_server) removeFd(fd_index); ???
+		return true;
+	}
+	if (!(poll_fds[fd_index].revents & POLLIN)) {
+		//if (!is_server) removeFd(fd_index); ???
+		return true;
+	}
+
+	return false;
 }

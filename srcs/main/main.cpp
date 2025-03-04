@@ -51,12 +51,12 @@ int	main(int argc, char **argv)
 			// check which fds in poll_fds are ready
 			for (int i = 0; i < poller.nfds; ++i) {
 
-				// POLLERR, POLLHUP, POLLNVAL
+				bool is_server = connection.isServerFd(poller.poll_fds[i].fd,
+					server_sockets.server_fds);
 
-				if (!(poller.poll_fds[i].revents & POLLIN)) continue;
+				if (poller.skipFd(is_server, i)) continue;
 
-				if (connection.isServerFd(poller.poll_fds[i].fd,
-						server_sockets.server_fds)) {
+				if (is_server) {
 					connection.handleServerFd(poller.poll_fds[i].fd, poller);
 				}
 				else {
