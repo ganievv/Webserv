@@ -7,6 +7,7 @@
 #include <string>
 #include <regex>
 #include <set>
+#include <poll.h>
 
 struct HttpRequest {
 	std::string	method;
@@ -16,9 +17,11 @@ struct HttpRequest {
 	std::string	body;
 	bool	isValid = true;
 	std::string	errorMessage;
+	bool	headersParsed = false;
+	struct	pollfd	poll_fd;
 };
 
-HttpRequest	parseHttpRequest(const std::string &rawRequest);
+HttpRequest	parseHttpRequest(int clientFd);
 void		testParseHttpRequest(void);
 
 #endif
