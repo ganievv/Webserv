@@ -45,16 +45,18 @@ int	main(int argc, char **argv)
 		server_sockets.initSockets(parser.servers);
 		poller.initPoll(server_sockets.server_fds);
 
+		int curr_nfds;
 		for (;;) {
-			poller.processPoll();
+			curr_nfds = poller.nfds;
+			poller.processPoll(curr_nfds);
 
 			// check which fds in poll_fds are ready
-			for (int i = 0; i < poller.nfds; ++i) {
+			for (int i = 0; i < curr_nfds; ++i) {
 
 				bool is_server = connection.isServerFd(poller.poll_fds[i].fd,
 					server_sockets.server_fds);
 
-				if (poller.skipFd(is_server, i)) continue;
+				if (poller.skipFd(is_server, i, curr_nfds)) continue;
 
 				if (is_server) {
 					connection.handleServerFd(poller.poll_fds[i].fd, poller);
@@ -68,9 +70,10 @@ int	main(int argc, char **argv)
 						response.formResponse(request, webserv);
 						response.sendResponse(poller.poll_fds[i].fd);
 					}
-					poller.removeFd(i);
+					poller.removeFd(i, curr_nfds);
 				}
 			}
+			poller.compressFdArr();
 		}
 
 	} catch (const std::exception& e) {
