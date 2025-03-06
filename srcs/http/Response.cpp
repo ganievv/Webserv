@@ -186,18 +186,20 @@ void	Response::formError(int code, const Webserv& webserv)
 
 bool	Response::addBody(const std::string& full_path, bool is_bin)
 {
-	std::ifstream file(full_path, (is_bin ? std::ios::binary : std::ios::in));
+	std::ifstream file(full_path,
+		(is_bin ? (std::ios::binary | std::ios::in) : std::ios::in));
 
-	if (file) {
-		std::stringstream buffer;
-		buffer << file.rdbuf();
-		this->body = buffer.str();
-		//this->body.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-		file.close();
-		return true;
-	}
+	if (!file)
+		return false;
 
-	return false;
+	file.seekg(0, std::ios::end);
+	size_t size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	this->body.resize(size);
+	file.read(&this->body[0], size);
+
+	return file.good();
 }
 
 void	Response::sendResponse(int socket_fd)
