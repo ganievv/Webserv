@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "../../includes/webserv.hpp"
 

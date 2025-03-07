@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <sys/stat.h>
+#include <filesystem>
 
 struct Webserv;
 struct HttpRequest;
