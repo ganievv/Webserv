@@ -52,26 +52,53 @@ int	main(int argc, char **argv)
 
 			// check which fds in poll_fds are ready
 			for (int i = 0; i < curr_nfds; ++i) {
+				int fd = poller.poll_fds[i].fd;
+				bool is_server = connection.isServerFd(fd, server_sockets.server_fds);
 
-				bool is_server = connection.isServerFd(poller.poll_fds[i].fd,
-					server_sockets.server_fds);
-
-				if (poller.skipFd(is_server, i, curr_nfds)) continue;
-
-				if (is_server) {
-					connection.handleServerFd(poller.poll_fds[i].fd, poller);
-				}
-				else {
-					Response response;
-					HttpRequest request = parseHttpRequest(poller.poll_fds[i].fd, parser.servers); //now needs parser.servers to work
-					if (request.isValid) {
-						printRequest(request);
-						response.chooseServer(poller.poll_fds[i].fd, request, parser.servers);
-						response.formResponse(request, webserv);
-						response.sendResponse(poller.poll_fds[i].fd);
-					}
+				if (poller.isFdBad(i)) {
 					poller.removeFd(i, curr_nfds);
+					continue;
 				}
+
+				if (is_server && poller.isFdReadable(i)) {
+					connection.handleServerFd(fd, poller);
+				}
+
+				if (!is_server && poller.isFdReadable(i)) {
+					HttpRequest request = parseHttpRequest(fd, parser.servers); //now needs parser.servers to work
+
+					poller.addWriteEvent(i);
+					if (request.isValid) {
+						Response *response = new Response();
+						webserv.responses.push_back(response);
+						response->setFd(fd);
+						printRequest(request);
+						response->chooseServer(request, parser.servers);
+						response->formResponse(request, webserv);
+					}
+				}
+
+				if (!is_server && poller.isFdWriteable(i)) {
+					Response *response = nullptr;
+					auto it = webserv.responses.begin();
+					for (; it != webserv.responses.end(); ++it) {
+						if ((*it)->getFd() == poller.poll_fds[i].fd) {
+							response = *it;
+							break;
+						}
+					}
+					bool is_sent = false;
+					if (response && response->getIsFormed()) {
+						is_sent = response->sendResponse();
+						if (is_sent) {
+							delete response;
+							webserv.responses.erase(it);
+							poller.removeFd(i, curr_nfds);
+							poller.removeWriteEvent(i);
+						}
+					}
+				}
+
 			}
 			poller.compressFdArr();
 		}

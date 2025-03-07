@@ -217,7 +217,7 @@ HttpRequest	parseHttpRequest(int clientFd, std::vector<serverConfig>& servers) {
 	} else {
 		BUFFER_SIZE = currentServer.client_max_body_size;
 	}
-	std::cout << "BUFFER_SIZE: " << BUFFER_SIZE << std::endl;
+	//std::cout << "BUFFER_SIZE: " << BUFFER_SIZE << std::endl;
 	std::vector<char>	buffer(BUFFER_SIZE);
 
 	// Handle request body

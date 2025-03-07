@@ -12,7 +12,7 @@ std::string	Response::findHeaderValue(const std::string& name,
 	return value;
 }
 
-void	Response::chooseServer(int fd, const HttpRequest& request,
+void	Response::chooseServer(const HttpRequest& request,
 	std::vector<serverConfig>& servers)
 {
 	struct sockaddr_in client_address;
@@ -48,7 +48,11 @@ void	Response::addHeader(const std::string& name, const std::string& value)
 
 void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 {
-	if (this->choosed_server == nullptr) return;
+	if (this->choosed_server == nullptr) {
+		formError(404, webserv);
+		is_formed = true;
+		return;
+	}
 
 	this->http_version = "HTTP/1.1";
 
@@ -61,6 +65,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	findRouteInConfig(request.path);
 	if (choosed_route && !choosed_route->redirection.empty()) {
 		redirect(webserv);
+		is_formed = true;
 		return;
 	}
 
@@ -81,6 +86,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 			formError(405, webserv);
 		}
 	}
+	is_formed = true;
 }
 
 void	Response::findRouteInConfig(const std::string& request_path)
@@ -225,27 +231,42 @@ bool	Response::addBody(const std::string& full_path, bool is_bin)
 	return file.good();
 }
 
-void	Response::sendResponse(int socket_fd)
+int	Response::sendResponse()
 {
-	std::string response;
+	std::string initline_and_headers;
 
-	if (this->choosed_server == nullptr) return;
+	if (!headers_sent) {
+		initline_and_headers.reserve(1024);
+		initline_and_headers = http_version + " " + status_code + " "
+			+ reason_phrase + "\r\n";
 
-	response.reserve(1024);
-	response = http_version + " " + status_code + " "
-		+ reason_phrase + "\r\n";
+		for (const auto&[key, value] : headers) {
+			initline_and_headers += key + ": " + value + "\r\n";
+		}
+		initline_and_headers += "\r\n";
 
-	for (const auto&[key, value] : headers) {
-		response += key + ": " + value + "\r\n";
+		if (sendChunk(initline_and_headers)) {
+			headers_sent = true;
+			total_bytes_sent = 0;
+		}
+		else return 0;
 	}
+	return sendChunk(this->body);
+}
 
-	response += "\r\n";
-	response += body;
-
-	ssize_t bytes_sent = send(socket_fd, response.c_str(), response.size(), 0);
+int	Response::sendChunk(const std::string& chunk)
+{
+	int	bytes_sent = 0;
+	int response_size = chunk.size() - total_bytes_sent;
+	const char* to_send = chunk.c_str() + total_bytes_sent;
+ 
+	bytes_sent = send(fd, to_send, response_size, 0);
 	if (bytes_sent == -1) {
 		std::cerr << "failed to send a http request" << std::endl;
+		return 0;
 	}
+	total_bytes_sent += bytes_sent;
+	return (size_t)total_bytes_sent == chunk.size();
 }
 
 std::string Response::takeGMTTime()
@@ -374,4 +395,16 @@ std::string Response::checkLastWriteTime(const char *path)
 		if (size > 0) mod_time = std::string(buff);
 	}
 	return mod_time;
+}
+
+bool	Response::getIsFormed() const {
+	return is_formed;
+}
+
+int	Response::getFd() const {
+	return fd;
+}
+
+void	Response::setFd(int fd) {
+	this->fd = fd;
 }

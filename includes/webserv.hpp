@@ -21,6 +21,14 @@ struct Webserv
 	std::string	config_path;
 	std::map<int, std::string> status_code_info;
 	std::map<std::string, std::string> content_types;
+
+	std::vector<Response*> responses;
+	~Webserv() {
+		for (Response* response : responses) {
+			delete response;
+		}
+		responses.clear();
+	}
 };
 
 #endif
