@@ -69,10 +69,11 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		formError(404, webserv);
 	}
 	else {
-		if (request.method == "GET" && isMethodAllowed(request.method)) {
+		if (full_path != "./website/download" && request.method == "GET" && isMethodAllowed(request.method)) {
 			handleGET(full_path, webserv);
 		}
-		else if (request.method == "POST" && isMethodAllowed(request.method)) {
+		else if (full_path == "./website/download" || (request.method == "POST" && isMethodAllowed(request.method))) {
+			handlePOST(request, webserv);
 		}
 		else if (request.method == "DELETE" && isMethodAllowed(request.method)) {
 		}
@@ -116,6 +117,28 @@ void	Response::handleGET(std::string& full_path, const Webserv& webserv)
 	else
 		formError(403, webserv);
 }
+
+//handle POST method
+
+void	Response::handlePOST(const HttpRequest &request, const Webserv &webserv)
+{
+	if (request.path == "/download")
+	{
+		CgiHandler handler(request, webserv, "/Users/ashirzad/Desktop/w/website/download/download.py");
+		this->body = handler.executeCgi();
+		addHeader("Content-Type", "text/html");
+		addHeader("Content-Length", std::to_string(this->body.size()));
+	}
+	else
+	{
+		CgiHandler handler(request, webserv, "/Users/ashirzad/Desktop/w/website/upload/upload.py");
+		handler.executeCgi();
+		this->body = "file got uploaded successfully\n";
+		addHeader("Content-Length", std::to_string(this->body.size()));
+	}
+
+}
+
 
 void	Response::handleDirRequest(std::string& full_path, const Webserv& webserv)
 {

@@ -14,6 +14,8 @@
 
 #include "./main/utils.hpp"
 
+#include "../srcs/CGI/CGI_Handler.hpp"
+
 struct Webserv
 {
 	std::string	config_path;
