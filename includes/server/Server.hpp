@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <netinet/in.h>
+#include <chrono>
+#include <unordered_map>
 
 struct Route {
 	std::string	path;
@@ -21,16 +23,21 @@ struct Route {
 };
 
 struct serverConfig {
-	std::string	port; //chnaged to handle multiple listen directives
-	std::string	host; //chnaged to handle multiple listen directives
-	// std::vector<std::string>	port;
-	// std::vector<std::string>	host;
+	std::string	port;
+	std::string	host;
 	std::vector<std::string>	serverNames;
 	std::map<int, std::string>	errorPages;
 	int	client_max_body_size = -1; //to represent default value
 	std::string		root;
 	std::vector<Route> routes;
 	struct sockaddr_in	bind_addr; // for Sockets::bindSocket()
+};
+
+struct connectionState {
+	int			fd;
+	std::string	buffer; //raw request data, could be partial
+	std::chrono::steady_clock::time_point	lastActivity; //time of the last read
+	bool		isPending; //if the parsing returned, without throwing an error
 };
 
 #endif

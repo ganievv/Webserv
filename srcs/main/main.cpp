@@ -30,6 +30,7 @@ int	main(int argc, char **argv)
 	Sockets			server_sockets;
 	Poller			poller;
 	Connection		connection;
+	std::unordered_map<int, connectionState>	connectionStates; //fd is the key
 
 	webserv.config_path = getConfigPath(argc, argv);
 	initStatusCodeInfo(webserv.status_code_info);
@@ -48,6 +49,7 @@ int	main(int argc, char **argv)
 		int curr_nfds;
 		for (;;) {
 			curr_nfds = poller.nfds;
+			timeOutCheck(curr_nfds, connectionStates, poller); //removes fd and connectionState rn
 			poller.processPoll(curr_nfds);
 
 			// check which fds in poll_fds are ready
@@ -63,19 +65,47 @@ int	main(int argc, char **argv)
 				if (is_server && poller.isFdReadable(i)) {
 					connection.handleServerFd(fd, poller);
 				}
-
+				//fd ready for reading
 				if (!is_server && poller.isFdReadable(i)) {
-					HttpRequest request = parseHttpRequest(fd, parser.servers); //now needs parser.servers to work
-
-					poller.addWriteEvent(i);
-					if (request.isValid) {
+					if (connectionStates.find(fd) == connectionStates.end()) {
+						connectionStates[fd] = {fd, "", std::chrono::steady_clock::now(), false};
+					}
+					connectionState &state = connectionStates[fd];
+					//maybe implement this in a seperat "read" function
+					char	tmpBuf[4096];
+					ssize_t	bytesRead = recv(fd, tmpBuf, sizeof(tmpBuf), 0);
+					if (bytesRead > 0) {
+						state.buffer.append(tmpBuf, bytesRead);
+						state.lastActivity = std::chrono::steady_clock::now();
+					} else if (bytesRead == 0) { //client closed connection
+						state.buffer.clear(); //clear buffer
+						close(fd); //remove it
+						connectionStates.erase(fd);
+						poller.removeFd(i, curr_nfds);
+						continue;
+					} else { //for non-blocking mode, if no data is available bytesRead could be -1
+						//we simply skip fd until the next poll
+						state.lastActivity = std::chrono::steady_clock::now(); //even if recv fails
+						state.isPending = true; //optional
+						continue;
+					}
+					//try to parse HTTP request from the accumulated buffer
+					HttpRequest	request = parseHttpRequestFromBuffer(state.buffer, fd, parser.servers); //new way
+					// if (request.isValid) { //old way to check
+					if (request.isComplete) {
+						state.buffer.clear(); //clear buffer
 						Response *response = new Response();
 						webserv.responses.push_back(response);
 						response->setFd(fd);
 						printRequest(request);
 						response->chooseServer(request, parser.servers);
 						response->formResponse(request, webserv);
+						if (response->getIsFormed()) { //only enable writing if response is fully prepared
+							poller.addWriteEvent(i); //moved from after parsing, not every request could be fully parsed
+						}
 					}
+					//else just continue
+					//request still incomplete, state remains in connectionStates
 				}
 
 				if (!is_server && poller.isFdWriteable(i)) {
