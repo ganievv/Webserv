@@ -19,4 +19,4 @@ file_path = f"{dir_path}/{filename}"
 with open(file_path, "wb") as file:
 	file.write(data)
 
-print(f"The {filename} got uploaded successfully\n")
+print(f"The {filename} got uploaded successfully ok\n")
