@@ -42,6 +42,7 @@ class Response
 		std::string	checkContentType(std::string file, const Webserv& webserv);
 		std::string takeGMTTime();
 		std::string checkLastWriteTime(const char *path);
+		void		deleteQueryStr(std::string& path);
 
 		//handle CGI
 		void	handleCGI(const HttpRequest &request, std::string full_path);

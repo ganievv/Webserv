@@ -83,7 +83,7 @@ std::string CgiHandler::executeCgi()
 		close(stdinPipe[0]);
 
 		char **envp = getEnvAsCstrArray();
-		std::string python = "/Users/ashirzad/homebrew/bin/python3.10";
+		std::string python = "/usr/local/bin/python3";
 
 		char *argv[] = {(char *)python.c_str(), (char *)_scriptPath.c_str(), NULL};
 		execve(python.c_str(), argv, envp);

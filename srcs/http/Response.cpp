@@ -46,6 +46,14 @@ void	Response::addHeader(const std::string& name, const std::string& value)
 	headers.insert(std::pair<std::string, std::string>(name, value));
 }
 
+void	Response::deleteQueryStr(std::string& path)
+{
+	size_t pos = path.find_last_of('?');
+	if (pos != std::string::npos) {
+		path = path.substr(0, pos);
+	}
+}
+
 void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 {
 	if (this->choosed_server == nullptr) {
@@ -71,8 +79,9 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	}
 
 	std::string full_path = findFullPath(request.path);
+	deleteQueryStr(full_path);
 
-	if (full_path.empty() || !std::filesystem::exists(full_path)) {
+	if (full_path.empty() || (!std::filesystem::exists(full_path))) {
 		formError(404, webserv);
 	}
 	else
