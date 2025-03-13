@@ -4,7 +4,7 @@ import os
 import cgi
 import cgitb
 
-dir_path = "/Users/ashirzad/Desktop/webserv/website/cgi-bin/database/"
+dir_path = "./website/cgi-bin/database"
 
 form = cgi.FieldStorage()
 
