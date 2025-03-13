@@ -30,7 +30,6 @@ int	main(int argc, char **argv)
 	Sockets			server_sockets;
 	Poller			poller;
 	Connection		connection;
-	std::unordered_map<int, connectionState>	connectionStates; //fd is the key
 
 	webserv.config_path = getConfigPath(argc, argv);
 	initStatusCodeInfo(webserv.status_code_info);
@@ -66,10 +65,10 @@ int	main(int argc, char **argv)
 				}
 				//fd ready for reading
 				if (!is_server && poller.isFdReadable(i)) {
-					if (connectionStates.find(fd) == connectionStates.end()) {
-						connectionStates[fd] = {fd, "", std::chrono::steady_clock::now(), false};
+					if (parser.connectionStates.find(fd) == parser.connectionStates.end()) {
+						parser.connectionStates[fd] = {fd, "", std::chrono::steady_clock::now(), false};
 					}
-					connectionState &state = connectionStates[fd];
+					connectionState &state = parser.connectionStates[fd];
 					//maybe implement this in a seperat "read" function
 					char	tmpBuf[4096];
 					ssize_t	bytesRead = recv(fd, tmpBuf, sizeof(tmpBuf), 0);
@@ -77,7 +76,7 @@ int	main(int argc, char **argv)
 						state.buffer.append(tmpBuf, bytesRead);
 					} else if (bytesRead == 0) { //client closed connection
 						state.buffer.clear(); //clear buffer
-						connectionStates.erase(fd);
+						parser.connectionStates.erase(fd);
 						poller.removeFd(i, curr_nfds);
 						continue;
 					} else { //for non-blocking mode, if no data is available bytesRead could be -1
@@ -127,7 +126,7 @@ int	main(int argc, char **argv)
 				}
 
 			}
-			timeOutCheck(curr_nfds, connectionStates, poller); //removes fd and connectionState rn
+			timeOutCheck(curr_nfds, parser.connectionStates, poller); //removes fd and connectionState rn
 			poller.compressFdArr();
 		}
 
