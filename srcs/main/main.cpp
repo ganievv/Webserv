@@ -69,22 +69,13 @@ int	main(int argc, char **argv)
 						parser.connectionStates[fd] = {fd, "", std::chrono::steady_clock::now(), false};
 					}
 					connectionState &state = parser.connectionStates[fd];
-					//maybe implement this in a seperat "read" function
-					char	tmpBuf[4096];
-					ssize_t	bytesRead = recv(fd, tmpBuf, sizeof(tmpBuf), 0);
-					if (bytesRead > 0) {
-						state.buffer.append(tmpBuf, bytesRead);
-					} else if (bytesRead == 0) { //client closed connection
-						state.buffer.clear(); //clear buffer
-						parser.connectionStates.erase(fd);
+					int res = readFromFd(fd, parser, state);
+					if (res == 0) {
 						poller.removeFd(i, curr_nfds);
 						continue;
-					} else { //for non-blocking mode, if no data is available bytesRead could be -1
-						//we simply skip fd until the next poll
-						state.lastActivity = std::chrono::steady_clock::now(); //even if recv fails
-						state.isPending = true; //optional
-						continue;
 					}
+					else if (res == -1) continue;
+
 					//try to parse HTTP request from the accumulated buffer
 					HttpRequest	request = parseHttpRequestFromBuffer(state.buffer, fd, parser.servers); //new way
 					// if (request.isValid) { //old way to check

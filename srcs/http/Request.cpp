@@ -13,6 +13,25 @@ seems to work with requests recieved in full, need to check partial requests and
 
 */
 
+int	readFromFd(int fd, ConfigParser& parser, connectionState &state)
+{
+	char	tmpBuf[4096];
+	ssize_t	bytesRead = recv(fd, tmpBuf, sizeof(tmpBuf), 0);
+	if (bytesRead > 0) {
+		state.buffer.append(tmpBuf, bytesRead);
+	} else if (bytesRead == 0) { //client closed connection
+		state.buffer.clear(); //clear buffer
+		parser.connectionStates.erase(fd);
+		return 0;
+	} else { //for non-blocking mode, if no data is available bytesRead could be -1
+		//we simply skip fd until the next poll
+		state.lastActivity = std::chrono::steady_clock::now(); //even if recv fails
+		state.isPending = true; //optional
+		return -1;
+	}
+	return 1;
+}
+
 serverConfig &selectServer(int fd, std::vector<serverConfig>& servers, std::string hostValue) {
 	struct sockaddr_in	client_address;
 	socklen_t			add_len = sizeof(client_address);
