@@ -3,6 +3,8 @@ import cgi
 import cgitb
 import urllib.parse
 
+print("Content-Type: text/plain")
+
 dir_path = os.environ.get("UPLOAD_PATH")
 
 
@@ -15,6 +17,8 @@ if ".." in resource:
 	print("invalid filename\n")
 
 file_path = f"{dir_path}/{resource}"
+
+print(file_path)
 
 if os.path.exists(file_path):
 	os.remove(file_path)
