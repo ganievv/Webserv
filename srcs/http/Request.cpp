@@ -52,8 +52,7 @@ void timeOutCheck(int curr_nfds, std::unordered_map<int, connectionState>& conne
 		if (elapsed.count() > TIMEOUT_SECONDS) {
 			int fd = it->first;
 			std::cout << "Timeout: Closing connection for fd: " << fd << std::endl; //testing
-			close(fd);
-			
+
 			// Find the correct index in poll_fds
 			for (int i = 0; i < curr_nfds; ++i) {
 				if (poller.poll_fds[i].fd == fd) {

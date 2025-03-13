@@ -49,7 +49,6 @@ int	main(int argc, char **argv)
 		int curr_nfds;
 		for (;;) {
 			curr_nfds = poller.nfds;
-			timeOutCheck(curr_nfds, connectionStates, poller); //removes fd and connectionState rn
 			poller.processPoll(curr_nfds);
 
 			// check which fds in poll_fds are ready
@@ -76,12 +75,10 @@ int	main(int argc, char **argv)
 					ssize_t	bytesRead = recv(fd, tmpBuf, sizeof(tmpBuf), 0);
 					if (bytesRead > 0) {
 						state.buffer.append(tmpBuf, bytesRead);
-						state.lastActivity = std::chrono::steady_clock::now();
 					} else if (bytesRead == 0) { //client closed connection
 						state.buffer.clear(); //clear buffer
-						close(fd); //remove it
 						connectionStates.erase(fd);
-						poller.removeFd(i, curr_nfds); // I close fd also here - is this a problem ?
+						poller.removeFd(i, curr_nfds);
 						continue;
 					} else { //for non-blocking mode, if no data is available bytesRead could be -1
 						//we simply skip fd until the next poll
@@ -130,6 +127,7 @@ int	main(int argc, char **argv)
 				}
 
 			}
+			timeOutCheck(curr_nfds, connectionStates, poller); //removes fd and connectionState rn
 			poller.compressFdArr();
 		}
 
