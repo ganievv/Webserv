@@ -56,6 +56,12 @@ void	Response::deleteQueryStr(std::string& path)
 
 void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 {
+	if (!request.isValid) {
+		const auto& it = request.errorCodes.begin();
+		formError(it->first, webserv);
+		is_formed = true;
+		return;
+	}
 	if (this->choosed_server == nullptr) {
 		formError(404, webserv);
 		is_formed = true;

@@ -77,8 +77,7 @@ int	main(int argc, char **argv)
 					else if (res == -1) continue;
 
 					//try to parse HTTP request from the accumulated buffer
-					HttpRequest	request = parseHttpRequestFromBuffer(state.buffer, fd, parser.servers); //new way
-					// if (request.isValid) { //old way to check
+					HttpRequest	request = parseHttpRequestFromBuffer(state.buffer, fd, parser.servers);
 					if (request.isComplete) {
 						state.buffer.clear(); //clear buffer
 						Response *response = new Response();
@@ -91,8 +90,7 @@ int	main(int argc, char **argv)
 							poller.addWriteEvent(i); //moved from after parsing, not every request could be fully parsed
 						}
 					}
-					//else just continue
-					//request still incomplete, state remains in connectionStates
+					else continue; //request still incomplete, state remains in connectionStates
 				}
 
 				if (!is_server && poller.isFdWriteable(i)) {

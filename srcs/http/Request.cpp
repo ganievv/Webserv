@@ -67,6 +67,11 @@ void timeOutCheck(int curr_nfds, std::unordered_map<int, connectionState>& conne
 	auto now = std::chrono::steady_clock::now();
 
 	for (auto it = connectionStates.begin(); it != connectionStates.end(); ) {
+		if (!it->second.isPending) {
+			++it;
+			continue;
+		}
+
 		std::chrono::duration<double> elapsed = now - it->second.lastActivity;
 		if (elapsed.count() > TIMEOUT_SECONDS) {
 			int fd = it->first;
