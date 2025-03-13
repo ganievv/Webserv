@@ -75,9 +75,10 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	if (full_path.empty() || !std::filesystem::exists(full_path)) {
 		formError(404, webserv);
 	}
-	if (1 == 1) {
-		if (request.path.find("cgi-bin") != std::string::npos){
-			handleCGI(request, webserv);
+	else
+	{
+		if (request.path.find(".py") != std::string::npos){
+			handleCGI(request, full_path);
 		}
 		else if (request.method == "GET" && isMethodAllowed(request.method)) {
 			handleGET(full_path, webserv);
@@ -85,7 +86,6 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		else {
 			formError(405, webserv);
 		}
-	}
 	is_formed = true;
 }
 
@@ -126,32 +126,28 @@ void	Response::handleGET(std::string& full_path, const Webserv& webserv)
 
 //handle CGI
 
-void	Response::handleCGI(const HttpRequest &request, const Webserv &webserv)
+void	Response::handleCGI(const HttpRequest &request, std::string full_path)
 {
-	if (request.path.find("/cgi-bin/upload.py") != std::string::npos)
+	FILE *file = fopen(full_path.c_str(), "r");
+	if (!file)
 	{
-		CgiHandler handler(request, webserv, "/Users/ashirzad/Desktop/webserv/website/cgi-bin/upload.py");
-
-		this->body = handler.executeCgi();
+		body = "Invalid file path\n";
 		addHeader("Content-Type", "text/plain");
 		addHeader("Content-Length", std::to_string(body.size()));
+		return ;
 	}
-	else if (request.path.find("/cgi-bin/download.py") != std::string::npos)
-	{
-		CgiHandler handler(request, webserv, "/Users/ashirzad/Desktop/webserv/website/cgi-bin/download.py");
+	std::string uploadPath = "./database";
+	if (choosed_route && !choosed_route->uploadPath.empty())
+	uploadPath = choosed_route->uploadPath;
+	CgiHandler handler(request, full_path, uploadPath);
+	this->body = handler.executeCgi();
+	int f = body.find("\n");
+	std::string content_type = body.substr(14, f - 14);
+	std::string message = body.substr(f+1);
 
-		this->body = handler.executeCgi();
-		addHeader("Content-Type", "text/html");
-		addHeader("Content-Length", std::to_string(body.size()));
-	}
-	else if (request.path.find("/cgi-bin/delete.py") != std::string::npos)
-	{
-		CgiHandler handler(request, webserv, "/Users/ashirzad/Desktop/webserv/website/cgi-bin/delete.py");
-
-		this->body = handler.executeCgi();
-		addHeader("Content-Type", "text/plain");
-		addHeader("Content-Length", std::to_string(body.size()));
-	}
+	body = message;
+	addHeader("Content-Type", content_type);
+	addHeader("Content-Length", std::to_string(body.size()));
 }
 
 

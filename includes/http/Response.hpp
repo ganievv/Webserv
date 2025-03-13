@@ -4,6 +4,7 @@
 #include <ctime>
 #include <sys/stat.h>
 #include <filesystem>
+#include <fstream>
 
 struct Webserv;
 struct HttpRequest;
@@ -43,7 +44,7 @@ class Response
 		std::string checkLastWriteTime(const char *path);
 
 		//handle CGI
-		void	handleCGI(const HttpRequest &request, const Webserv &webserv);
+		void	handleCGI(const HttpRequest &request, std::string full_path);
 
 	public:
 		std::string findHeaderValue(const std::string& name,

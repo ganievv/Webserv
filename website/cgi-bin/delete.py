@@ -1,11 +1,9 @@
-#!/Users/ashirzad/homebrew/bin/python3.10
-
 import os
 import cgi
 import cgitb
 import urllib.parse
 
-path = "/Users/ashirzad/Desktop/webserv/website/cgi-bin/database"
+dir_path = os.environ.get("UPLOAD_PATH")
 
 
 # # Parse form data
@@ -16,7 +14,7 @@ resource = query_string[query_string.find("=") + 1:]
 if ".." in resource:
 	print("invalid filename\n")
 
-file_path = f"{path}/{resource}"
+file_path = f"{dir_path}/{resource}"
 
 if os.path.exists(file_path):
 	os.remove(file_path)

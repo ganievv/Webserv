@@ -1,11 +1,11 @@
 #include "CGI_Handler.hpp"
 
-CgiHandler::CgiHandler(const HttpRequest &request, const Webserv &webserv, std::string scriptPath)
+CgiHandler::CgiHandler(const HttpRequest &request, std::string scriptPath, std::string uploadPath)
 {
-	(void)webserv;
-    this->_env["REQUEST_METHOD"] = request.method;
-    this->_env["CONTENT_TYPE"] = request.headers.find("Content-Type")->second;
-    this->_env["CONTENT_LENGTH"] = request.headers.find("Content-Length")->second;
+	this->_env["REQUEST_METHOD"] = request.method;
+	this->_env["CONTENT_TYPE"] = request.headers.find("Content-Type")->second;
+	this->_env["CONTENT_LENGTH"] = request.headers.find("Content-Length")->second;
+	this->_env["UPLOAD_PATH"] = getUploadPath(scriptPath, uploadPath);
 	this->_env["QUERY_STRING"] = getQueryString(request.path);
 
 	_scriptPath = scriptPath;
@@ -15,6 +15,16 @@ CgiHandler::CgiHandler(const HttpRequest &request, const Webserv &webserv, std::
 CgiHandler::~CgiHandler(void)
 {
 
+}
+
+std::string CgiHandler::getUploadPath(std::string scriptPath, std::string uploadPath)
+{
+	if (scriptPath.find("/", 10) != std::string::npos)
+	{
+		int f = scriptPath.find("/", 10);
+		return (scriptPath.substr(0, f) + uploadPath.substr(1));
+	}
+	return "";
 }
 
 std::string CgiHandler::getQueryString(std::string path)
