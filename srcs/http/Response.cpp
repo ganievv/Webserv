@@ -83,9 +83,9 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		else if (request.method == "GET" && isMethodAllowed(request.method)) {
 			handleGET(full_path, webserv);
 		}
-		else {
+		else
 			formError(405, webserv);
-		}
+	}
 	is_formed = true;
 }
 
