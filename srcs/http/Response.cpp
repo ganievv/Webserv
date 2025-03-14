@@ -92,7 +92,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	}
 	else
 	{
-		if (request.path.find(".py") != std::string::npos){
+		if (request.path.find(".py") != std::string::npos && isMethodAllowed(request.method)){
 			handleCGI(request, full_path);
 		}
 		else if (request.method == "GET" && isMethodAllowed(request.method)) {
@@ -331,7 +331,7 @@ void	Response::redirect(const Webserv& webserv)
 		return;
 	}
 
-	this->status_code = code_info->first;
+	this->status_code = std::to_string(code_info->first);
 	this->reason_phrase = code_info->second;
 	addHeader("Location", redir_inf->second);
 }
