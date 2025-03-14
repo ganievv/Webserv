@@ -125,6 +125,7 @@ HttpRequest	parseHttpRequestFromBuffer(std::string &buffer, int fd, std::vector<
 		request.isValid = false;
 		request.errorCodes[400] = "Bad Request";
 		request.isComplete = true; //consider it complete so connection can be closed
+		return request;
 	}
 	//remove trailin '\r' if it exists, check if uniform delimlen is still needed
 	// if (!line.empty() || line.back() == '\r') {
