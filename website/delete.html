@@ -54,7 +54,7 @@
         <p id="responseMessage"></p>
     </div>
 
-	<script>
+    <script>
         function deleteResource() {
             const resource = document.getElementById('resource').value;
 
@@ -63,20 +63,24 @@
             })
             .then(response => response.text())
             .then(data => {
-
-								// si le mot error est dans la reponse, on affiche une erreur
-								if (data.includes('error') || data.includes('not exist')) {
-									document.getElementById('responseMessage').innerText = data;
-									jsConfetti.addConfetti({
-											emojis: ['❌'],
-									})
-									return;
-								}
-
-								jsConfetti.addConfetti({
-									confettiColors: ['#ff00ff', '#00ffff'],
-									confettiRadius: 8,
-								})
+                // si le mot error est dans la reponse, on affiche une erreur
+                if (data.includes('error') || data.includes('not exist')) {
+                    document.getElementById('responseMessage').innerText = data;
+                    jsConfetti.addConfetti({
+                        emojis: ['❌'],
+                    })
+                    return;
+                }
+                if (/4\d\d/.test(data)) {
+                    document.open();
+                    document.write(data);
+                    document.close();
+                    return;
+                }
+                jsConfetti.addConfetti({
+                    confettiColors: ['#ff00ff', '#00ffff'],
+                    confettiRadius: 8,
+                })
                 document.getElementById('responseMessage').innerText = data;
             })
         }
