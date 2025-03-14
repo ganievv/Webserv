@@ -88,6 +88,7 @@ int	main(int argc, char **argv)
 						response->formResponse(request, webserv);
 						if (response->getIsFormed()) { //only enable writing if response is fully prepared
 							poller.addWriteEvent(i); //moved from after parsing, not every request could be fully parsed
+							poller.removeReadEvent(i);
 						}
 					}
 					else continue; //request still incomplete, state remains in connectionStates
