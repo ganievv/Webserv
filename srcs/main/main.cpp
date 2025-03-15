@@ -1,28 +1,5 @@
 #include "../../includes/webserv.hpp"
 
-void printRequest(HttpRequest& request)
-{
-	std::ofstream outFile("request.txt", std::ios::app);
-	if (!outFile) {
-		return;
-	}
-
-	outFile << "--------------------\n";
-	outFile << "poll_fd: " << request.poll_fd.fd << "\n";
-	outFile << "Method: " << request.method << "\n";
-	outFile << "Path: " << request.path << "\n";
-	outFile << "HTTP Version: " << request.httpVersion << "\n";
-
-	for (const auto& header : request.headers) {
-		outFile << header.first << ": " << header.second << "\n";
-	}
-
-	outFile << "Body: " << request.body << "\n";
-	outFile << "--------------------\n\n";
-
-	outFile.close();
-}
-
 int	main(int argc, char **argv)
 {
 	Webserv			webserv;
@@ -83,11 +60,12 @@ int	main(int argc, char **argv)
 						Response *response = new Response();
 						webserv.responses.push_back(response);
 						response->setFd(fd);
-						printRequest(request);
+						//outputRequestToFile(request, "request.txt");
 						response->chooseServer(request, parser.servers);
 						response->formResponse(request, webserv);
 						if (response->getIsFormed()) { //only enable writing if response is fully prepared
 							poller.addWriteEvent(i); //moved from after parsing, not every request could be fully parsed
+							poller.removeReadEvent(i);
 						}
 					}
 					else continue; //request still incomplete, state remains in connectionStates
@@ -120,7 +98,7 @@ int	main(int argc, char **argv)
 		}
 
 	} catch (const std::exception& e) {
-		std::cerr << "caught error: " << e.what() << std::endl;
+		std::cerr << e.what() << std::endl;
 		return 1;
 	}
 

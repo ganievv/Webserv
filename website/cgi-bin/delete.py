@@ -7,8 +7,6 @@ print("Content-Type: text/plain\n")
 
 dir_path = os.environ.get("UPLOAD_PATH")
 
-
-# # Parse form data
 query_string = os.environ.get('QUERY_STRING', '')
 
 resource = query_string[query_string.find("=") + 1:]

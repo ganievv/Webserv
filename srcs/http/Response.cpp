@@ -56,6 +56,14 @@ void	Response::deleteQueryStr(std::string& path)
 
 void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 {
+	this->http_version = "HTTP/1.1";
+
+	std::string	time = takeGMTTime();
+	if (!time.empty()) addHeader("Date", time);
+
+	addHeader("Server", "webserv/0.01");
+	addHeader("Connection", "close");
+
 	if (!request.isValid) {
 		const auto& it = request.errorCodes.begin();
 		formError(it->first, webserv);
@@ -67,14 +75,6 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 		is_formed = true;
 		return;
 	}
-
-	this->http_version = "HTTP/1.1";
-
-	std::string	time = takeGMTTime();
-	if (!time.empty()) addHeader("Date", time);
-
-	addHeader("Server", "webserv/0.01");
-	addHeader("Connection", "close");
 
 	this->request_path = request.path;
 	findRouteInConfig(request.path);
@@ -163,7 +163,6 @@ void	Response::handleCGI(const HttpRequest &request, const Webserv &webserv, std
 	std::string message = body.substr(f+1);
 
 	body = message;
-	std::cout << body << std::endl;
 	status_code = "200";
 	reason_phrase = webserv.status_code_info.at(200);
 	addHeader("Content-Type", content_type);
