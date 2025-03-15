@@ -17,7 +17,6 @@ class Response
 		bool			is_formed = false;
 		int				fd;
 		int				total_bytes_sent = 0;
-		bool			headers_sent = false;
 		std::string		request_path;
 
 		std::string http_version;

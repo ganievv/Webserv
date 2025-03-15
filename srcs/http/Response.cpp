@@ -257,25 +257,18 @@ bool	Response::addBody(const std::string& full_path, bool is_bin)
 
 int	Response::sendResponse()
 {
-	std::string initline_and_headers;
+	std::string response;
 
-	if (!headers_sent) {
-		initline_and_headers.reserve(1024);
-		initline_and_headers = http_version + " " + status_code + " "
-			+ reason_phrase + "\r\n";
+	response.reserve(4000);
+	response = http_version + " " + status_code + " "
+		+ reason_phrase + "\r\n";
 
-		for (const auto&[key, value] : headers) {
-			initline_and_headers += key + ": " + value + "\r\n";
-		}
-		initline_and_headers += "\r\n";
-
-		if (sendChunk(initline_and_headers)) {
-			headers_sent = true;
-			total_bytes_sent = 0;
-		}
-		else return 0;
+	for (const auto&[key, value] : headers) {
+		response += key + ": " + value + "\r\n";
 	}
-	return sendChunk(this->body);
+	response += "\r\n" + body;
+
+	return sendChunk(response);
 }
 
 int	Response::sendChunk(const std::string& chunk)
