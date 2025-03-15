@@ -43,8 +43,8 @@
     <div class="container">
         <h2>Delete a Resource</h2>
         <form id="deleteForm">
-            <label for="resource">Select a resource to delete:</label>
-            <select id="resource" name="resource">
+            <label for="file">Select a file to delete:</label>
+            <select id="file" name="file">
                 <option value="file.txt">file.txt</option>
                 <option value="a b.png">a b.png</option>
             </select>
@@ -56,9 +56,9 @@
 
     <script>
         function deleteResource() {
-            const resource = document.getElementById('resource').value;
+            const resource = document.getElementById('file').value;
 
-            fetch('./cgi-bin/delete.py?resource=' + encodeURIComponent(resource), {
+            fetch('./cgi-bin/delete.py?file=' + encodeURIComponent(resource), {
                 method: 'DELETE',
             })
             .then(response => response.text())
