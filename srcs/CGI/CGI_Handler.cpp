@@ -5,8 +5,10 @@ CgiHandler::CgiHandler(const HttpRequest &request, std::string scriptPath, std::
 	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
 	this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->_env["REQUEST_METHOD"] = request.method;
-	this->_env["CONTENT_TYPE"] = request.headers.find("Content-Type")->second;
-	this->_env["CONTENT_LENGTH"] = request.headers.find("Content-Length")->second;
+	if (request.headers.find("Content-Type") != request.headers.end())
+		this->_env["CONTENT_TYPE"] = request.headers.find("Content-Type")->second;
+	if (request.headers.find("Content-Length") != request.headers.end())
+		this->_env["CONTENT_LENGTH"] = request.headers.find("Content-Length")->second;
 	this->_env["UPLOAD_PATH"] = getUploadPath(scriptPath, uploadPath);
 	this->_env["QUERY_STRING"] = getQueryString(request.path);
 
@@ -73,6 +75,7 @@ std::string CgiHandler::executeCgi()
 		return "";
 	}
 
+
 	pid_t pid = fork();
 	if (pid == 0)
 	{
@@ -83,13 +86,19 @@ std::string CgiHandler::executeCgi()
 		close(stdinPipe[1]);
 		dup2(stdinPipe[0], STDIN_FILENO);
 		close(stdinPipe[0]);
-
 		char **envp = getEnvAsCstrArray();
 		std::string python = "/usr/local/bin/python3";
 
 		char *argv[] = {(char *)python.c_str(), (char *)_scriptPath.c_str(), NULL};
 		execve(python.c_str(), argv, envp);
 
+		if (envp)
+		{
+			for (size_t i = 0; i < _env.size(); i++){
+				delete[] envp[i];
+			}
+			delete[] envp;
+		}
 		perror("execve");
 		exit(1);
 	}
