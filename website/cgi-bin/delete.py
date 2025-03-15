@@ -3,7 +3,7 @@ import cgi
 import cgitb
 import urllib.parse
 
-print("Content-Type: text/plain")
+print("Content-Type: text/plain\n")
 
 dir_path = os.environ.get("UPLOAD_PATH")
 
@@ -18,13 +18,11 @@ if ".." in resource:
 
 file_path = f"{dir_path}/{resource}"
 
-print(file_path)
-
 if os.path.exists(file_path):
 	os.remove(file_path)
 	print(f"File '{resource}' successfully got deleted\n")
 else:
-	print(f"no suche file '{resource}' exists\n")
+	print(f"no such file '{resource}' exists\n")
 
 
 

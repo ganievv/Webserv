@@ -92,6 +92,24 @@ void timeOutCheck(int curr_nfds, std::unordered_map<int, connectionState>& conne
 	}
 }
 
+
+std::string UrlDecoding(std::string path)
+{
+	std::string decoded_path;
+
+	for(size_t i = 0; i < path.size(); i++)
+	{
+		if (path[i] == '%' && path[i + 2]){
+			std::string hex = path.substr(i + 1, 2);
+			decoded_path += (int)strtol(hex.c_str(), NULL, 16);
+			i += 2;
+		}
+		else
+			decoded_path += path[i];
+	}
+	return (decoded_path);
+}
+
 HttpRequest	parseHttpRequestFromBuffer(std::string &buffer, int fd, std::vector<serverConfig>& servers) {
 	HttpRequest	request;
 	request.poll_fd.fd = fd;
@@ -139,7 +157,7 @@ HttpRequest	parseHttpRequestFromBuffer(std::string &buffer, int fd, std::vector<
 		request.isComplete = true;
 		return request;
 	}
-
+	request.path = UrlDecoding(request.path);
 	//check HTTP method, only these 3 are valid for this project
 	static const std::set<std::string>	validMethods = {"GET", "POST", "DELETE"};
 	if (validMethods.find(request.method) == validMethods.end()) {
@@ -515,14 +533,14 @@ void testParseHttpRequest(std::vector<serverConfig>& servers) {
 		perror("socketpair");
 		exit(EXIT_FAILURE);
 	}
-		
+
 	// Write the HTTP request to one end of the socketpair.
 	ssize_t n = write(sv[1], httpRequest.c_str(), httpRequest.size());
 	std::cout << "Bytes written to socketpair: " << n << "\n";
 
 	// Signal EOF on the writing end.
 	shutdown(sv[1], SHUT_WR);
-		
+
 	// Directly call parseHttpRequest using the reading end of the socketpair.
 	// HttpRequest request = parseHttpRequest(sv[0], servers); //old
 
@@ -546,7 +564,7 @@ void testParseHttpRequest(std::vector<serverConfig>& servers) {
 	if (!request.body.empty()) {
 		std::cout << "Body: " << request.body << "\n";
 	}
-		
+
 	close(sv[0]);
 	close(sv[1]);
 }

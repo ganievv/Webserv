@@ -46,7 +46,7 @@
             <label for="resource">Select a resource to delete:</label>
             <select id="resource" name="resource">
                 <option value="file.txt">file.txt</option>
-                <option value="topo_tree.png">topo_tree_png</option>
+                <option value="a b.png">a b.png</option>
             </select>
             <br><br>
             <button type="button" class="button" onclick="deleteResource()">Delete</button>
@@ -72,11 +72,6 @@
 									})
 									return;
 								}
-
-								jsConfetti.addConfetti({
-									confettiColors: ['#ff00ff', '#00ffff'],
-									confettiRadius: 8,
-								})
                 document.getElementById('responseMessage').innerText = data;
             })
         }

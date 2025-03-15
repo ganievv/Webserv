@@ -93,7 +93,7 @@ void	Response::formResponse(const HttpRequest& request, const Webserv& webserv)
 	else
 	{
 		if (request.path.find(".py") != std::string::npos && isMethodAllowed(request.method)){
-			handleCGI(request, full_path);
+			handleCGI(request, webserv, full_path);
 		}
 		else if (request.method == "GET" && isMethodAllowed(request.method)) {
 			handleGET(full_path, webserv);
@@ -141,12 +141,14 @@ void	Response::handleGET(std::string& full_path, const Webserv& webserv)
 
 //handle CGI
 
-void	Response::handleCGI(const HttpRequest &request, std::string full_path)
+void	Response::handleCGI(const HttpRequest &request, const Webserv &webserv, std::string full_path)
 {
 	FILE *file = fopen(full_path.c_str(), "r");
 	if (!file)
 	{
-		body = "Invalid file path\n";
+		this->body = "Invalid file path\n";
+		status_code = "404";
+		reason_phrase = webserv.status_code_info.at(404);
 		addHeader("Content-Type", "text/plain");
 		addHeader("Content-Length", std::to_string(body.size()));
 		return ;
@@ -161,6 +163,9 @@ void	Response::handleCGI(const HttpRequest &request, std::string full_path)
 	std::string message = body.substr(f+1);
 
 	body = message;
+	std::cout << body << std::endl;
+	status_code = "200";
+	reason_phrase = webserv.status_code_info.at(200);
 	addHeader("Content-Type", content_type);
 	addHeader("Content-Length", std::to_string(body.size()));
 }
@@ -313,8 +318,10 @@ bool	Response::isMethodAllowed(const std::string& method)
 	 * GET & POST are enabled by default
 	 */
 	if (!choosed_route || choosed_route->allowedMethods.empty()) {
+		// std::cout << choosed_route->allowedMethods.empty() << std::endl;
 		return (method == "GET" || method == "POST");
 	}
+
 
 	const auto& it = std::find(choosed_route->allowedMethods.begin(),
 		choosed_route->allowedMethods.end(), method);

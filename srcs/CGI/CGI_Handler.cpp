@@ -2,6 +2,8 @@
 
 CgiHandler::CgiHandler(const HttpRequest &request, std::string scriptPath, std::string uploadPath)
 {
+	this->_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	this->_env["SERVER_PROTOCOL"] = "HTTP/1.1";
 	this->_env["REQUEST_METHOD"] = request.method;
 	this->_env["CONTENT_TYPE"] = request.headers.find("Content-Type")->second;
 	this->_env["CONTENT_LENGTH"] = request.headers.find("Content-Length")->second;
@@ -97,9 +99,7 @@ std::string CgiHandler::executeCgi()
 		close(stdinPipe[0]);
 
 		if (!_body.empty())
-		{
 			write(stdinPipe[1], _body.c_str(), _body.size());
-		}
 		close(stdinPipe[1]);
 
 		char buffer[1024];

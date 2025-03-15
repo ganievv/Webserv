@@ -45,7 +45,7 @@ class Response
 		void		deleteQueryStr(std::string& path);
 
 		//handle CGI
-		void	handleCGI(const HttpRequest &request, std::string full_path);
+		void	handleCGI(const HttpRequest &request, const Webserv &webserv, std::string full_path);
 
 	public:
 		std::string findHeaderValue(const std::string& name,
