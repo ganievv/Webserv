@@ -47,7 +47,7 @@ std::string	ConfigParser::getLocationPath(const std::string &line) {
 
 int	ConfigParser::parseSize(const std::string &sizeStr) {
 	long	tmpVal;
-	if (!isdigit(sizeStr.back()) && (sizeStr.back() != 'M' && sizeStr.back() != 'm' && sizeStr.back() != 'k' && sizeStr.back() != 'K'))
+	if (!std::isdigit(sizeStr.back()) && (sizeStr.back() != 'M' && sizeStr.back() != 'm' && sizeStr.back() != 'k' && sizeStr.back() != 'K'))
 		return -1; //use default value if it's incoherent
 	if (sizeStr.size() == 1) {
 		tmpVal = std::stol(sizeStr.substr(0, sizeStr.size()));
