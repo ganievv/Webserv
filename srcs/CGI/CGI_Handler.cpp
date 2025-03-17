@@ -46,7 +46,19 @@ std::string CgiHandler::getQueryString(std::string path)
 	return (query);
 }
 
-char **CgiHandler::getEnvAsCstrArray(void) const
+char *CgiHandler::ft_strcpy(char *s1, const char *s2)
+{
+	int i = 0;
+	while (s2[i])
+	{
+		s1[i] = s2[i];
+		i++;
+	}
+	s1[i] = '\0';
+	return (s1);
+}
+
+char **CgiHandler::getEnvAsCstrArray(void);
 {
 	char **env;
 
@@ -57,7 +69,7 @@ char **CgiHandler::getEnvAsCstrArray(void) const
 	{
 		std::string value = it->first + "=" + it->second;
 		env[i] = new char[value.size() + 1];
-		env[i] = strcpy(env[i], (const char *)value.c_str());
+		env[i] = ft_strcpy(env[i], (const char *)value.c_str());
 		i++;
 	}
 	env[i] = NULL;
