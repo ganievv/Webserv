@@ -83,7 +83,7 @@ std::string CgiHandler::executeCgi()
 
 	if (pipe(stdoutPipe) == -1 || pipe(stdinPipe) == -1)
 	{
-		perror("pipe");
+		std::cout << "pipe error\n";
 		return "";
 	}
 
