@@ -58,7 +58,7 @@ char *CgiHandler::ft_strcpy(char *s1, const char *s2)
 	return (s1);
 }
 
-char **CgiHandler::getEnvAsCstrArray(void);
+char **CgiHandler::getEnvAsCstrArray(void)
 {
 	char **env;
 
