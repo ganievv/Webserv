@@ -111,8 +111,8 @@ std::string CgiHandler::executeCgi()
 			}
 			delete[] envp;
 		}
-		perror("execve");
-		exit(1);
+		std::cout << "execv error" << std::endl;
+		std::exit(1);
 	}
 	else if (pid > 0)
 	{
