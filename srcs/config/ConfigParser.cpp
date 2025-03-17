@@ -195,16 +195,25 @@ void	ConfigParser::checkDuplicateLocationPath(void) { //check for duplicate loca
 	}
 }
 
-//new, just cheks name
 void	ConfigParser::checkDuplicateServer(void) {
-	std::set<std::string>	seenNames;
+	std::set<std::pair<std::string, std::string>>	seenServerPortPairs;
 
 	for (size_t i = 0; i < servers.size(); i++) {
-		for (const std::string &name : servers[i].serverNames) {
-			if (seenNames.find(name) != seenNames.end()) {
-				throw std::runtime_error("Duplicate Server Configuration Found: Same server name on multiple Servers!");
+		const serverConfig &server = servers[i];
+		if (server.serverNames.empty()) { //if no servername
+			if (seenServerPortPairs.find({"", server.port}) != seenServerPortPairs.end()) { // if the port exists with no name already
+				throw std::runtime_error("Duplicate Server Configuration Found: Same port used by a server with no name!");
 			}
-			seenNames.insert(name);
+			//insert with empty name
+			seenServerPortPairs.insert({"", server.port});
+		} else {
+			for (const std::string &name : server.serverNames) { //check if the serverNames have the same port
+				if (seenServerPortPairs.find({name, server.port}) != seenServerPortPairs.end()) {
+					throw std::runtime_error("Duplicate Server Configuration Found: Same server name and port combination found!");
+				}
+				//just insert it to the set
+				seenServerPortPairs.insert({name, server.port});
+			}
 		}
 	}
 }
