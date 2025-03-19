@@ -55,7 +55,7 @@ server {
     }
 
     location /errors {
-      return 301 /;
+        return 301 /;
     }
 }
 ```
@@ -100,6 +100,7 @@ curl -X GET http://localhost:8080
 ```
 
 ---
-**Maintainers:**  
-- Semen Ganiev
+**Project Partners:**  
+- [Richard Horvath]()
+- [Ali Reza Shirzad]()
 
