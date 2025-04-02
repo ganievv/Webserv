@@ -101,6 +101,6 @@ curl -X GET http://localhost:8080
 
 ---
 **Project Partners:**  
-- [Richard Horvath]()
-- [Ali Reza Shirzad]()
+- [Richard Horvath](https://github.com/Richardh216)
+- [Ali Reza Shirzad](https://github.com/ashirzad313)
 
